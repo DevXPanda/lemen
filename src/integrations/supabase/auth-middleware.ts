@@ -1,0 +1,2 @@
+// Deprecated
+export const authMiddleware = () => {};
