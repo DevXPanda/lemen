@@ -64,15 +64,16 @@ export const sendMessage = mutation({
 export const getConversations = query({
   args: { profileId: v.id("profiles"), role: v.string() },
   handler: async (ctx, args) => {
-    let q = ctx.db.query("conversations");
-
-    if (args.role === "creator") {
-      q = q.withIndex("by_creator", (q) => q.eq("creatorId", args.profileId));
-    } else {
-      q = q.withIndex("by_brand", (q) => q.eq("brandId", args.profileId));
-    }
-
-    const conversations = await q.collect();
+    const conversations =
+      args.role === "creator"
+        ? await ctx.db
+            .query("conversations")
+            .withIndex("by_creator", (q) => q.eq("creatorId", args.profileId))
+            .collect()
+        : await ctx.db
+            .query("conversations")
+            .withIndex("by_brand", (q) => q.eq("brandId", args.profileId))
+            .collect();
 
     // Fetch details for each conversation
     const results = await Promise.all(
