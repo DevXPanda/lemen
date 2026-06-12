@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lumen Admin</title>
+    <meta
+      name="description"
+      content="Lumen platform admin dashboard — manage users, conversations and settings."
+    />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("admin_theme");
+          var d = window.matchMedia("(prefers-color-scheme: dark)").matches;
+          if (t === "dark" || (!t && d))
+            document.documentElement.classList.add("dark");
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

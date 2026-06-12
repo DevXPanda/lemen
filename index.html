@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pravixo</title>
+    <link rel="icon" type="image/png" href="/src/assets/log.png" />
+    <meta name="google-site-verification" content="9cFLFw3e-2KZgD8gMz9hT23NmWQBIeUDscaJc-H-TWk" />
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-3M20Z6KMKR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-3M20Z6KMKR', { send_page_view: false });
+    </script>
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("theme");
+          var d = window.matchMedia("(prefers-color-scheme: dark)").matches;
+          if (t === "dark" || (!t && d))
+            document.documentElement.classList.add("dark");
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
