@@ -24,6 +24,7 @@ import { useAuth } from "@/components/auth-provider";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import heroBanner from "@/assets/hero-banner.jpg";
+import pravixoFlow from "@/assets/pravixo-flow.jpeg";
 
 export function Landing() {
   const navigate = useNavigate();
@@ -376,6 +377,26 @@ export function Landing() {
           ))}
         </div>
       </section>
+      {/* PRAVIXO FLOW */}
+<section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
+  <div className="mb-8 text-center">
+    <h2 className="font-display text-3xl font-bold sm:text-4xl">
+      How Pravixo Works
+    </h2>
+
+    <p className="mt-2 text-muted-foreground">
+      Secure. Transparent. Trusted.
+    </p>
+  </div>
+
+  <div className="overflow-hidden rounded-[2rem] border border-border bg-card shadow-elevated">
+    <img
+      src={pravixoFlow}
+      alt="Pravixo Flow"
+      className="w-full object-cover transition-transform duration-500 hover:scale-[1.02]"
+    />
+  </div>
+</section>
 
       {/* CTA */}
       <section className="mx-auto max-w-7xl px-4 pb-24 sm:px-6 lg:px-8">
