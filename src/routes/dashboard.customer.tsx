@@ -601,7 +601,7 @@ export function CustomerDash() {
     <div>
       {/* COVER BANNER PREVIEW */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <section className="relative h-64 overflow-hidden bg-muted sm:h-80 rounded-b-2xl sm:rounded-b-3xl rounded-t-none shadow-sm border border-border/50">
+        <section className="relative aspect-[1361/450] overflow-hidden bg-muted w-full rounded-b-2xl sm:rounded-b-3xl rounded-t-none shadow-sm border border-border/50">
           {profile?.coverUrl ? (
             <img
               src={profile.coverUrl}

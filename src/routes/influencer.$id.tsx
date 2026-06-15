@@ -833,7 +833,7 @@ export function Profile() {
     <div>
       {/* COVER BANNER */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="relative h-64 overflow-hidden sm:h-80 w-full rounded-b-2xl sm:rounded-b-3xl rounded-t-none shadow-sm border border-border/50">
+        <div className="relative aspect-[1361/450] overflow-hidden w-full rounded-b-2xl sm:rounded-b-3xl rounded-t-none shadow-sm border border-border/50">
           <img src={inf.cover} alt="" className="h-full w-full object-cover" />
           {/* Subtle dark overlay for professional presentation */}
           <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px]" />
