@@ -41,7 +41,7 @@ function FeaturedProfileCard({
   handleCardClick,
 }: {
   inf: Influencer;
-  user: any;
+  user: { id: string; email: string } | null;
   handleCardClick: (id: string) => void;
 }) {
   return (
@@ -77,7 +77,9 @@ function FeaturedProfileCard({
         />
         <div className="mt-2.5 sm:mt-3 flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <h3 className="font-display font-semibold text-xs sm:text-base truncate">{inf.name}</h3>
+            <h3 className="font-display font-semibold text-xs sm:text-base truncate">
+              {inf.name}
+            </h3>
             <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
               {inf.handle}
             </p>
@@ -142,9 +144,9 @@ export function Landing() {
   const [searchQuery, setSearchQuery] = useState("");
 
   // ✅ Yahi add karna hai
-  const [activeInfo, setActiveInfo] = useState<
-    "creator" | "brand" | null
-  >(null);
+  const [activeInfo, setActiveInfo] = useState<"creator" | "brand" | null>(
+    null,
+  );
 
   useEffect(() => {
     document.title = "Lumen — Hire creators that move the needle";
@@ -174,8 +176,9 @@ export function Landing() {
             (p.twitterFollowers || 0),
           startingPrice: p.startingPrice || 0,
           location: p.location || "India",
-          rating: (p as any).rating ?? 5.0,
-          reviews: (p as any).reviewsCount ?? 0,
+          rating: (p as unknown as { rating?: number }).rating ?? 5.0,
+          reviews:
+            (p as unknown as { reviewsCount?: number }).reviewsCount ?? 0,
           available: true,
           avatar:
             p.avatarUrl ||
@@ -211,8 +214,9 @@ export function Landing() {
           followers: 0,
           startingPrice: p.startingPrice || 0,
           location: p.location || "India",
-          rating: (p as any).rating ?? 5.0,
-          reviews: (p as any).reviewsCount ?? 0,
+          rating: (p as unknown as { rating?: number }).rating ?? 5.0,
+          reviews:
+            (p as unknown as { reviewsCount?: number }).reviewsCount ?? 0,
           available: true,
           avatar:
             p.avatarUrl ||
@@ -455,33 +459,31 @@ export function Landing() {
           ))}
         </div>
       </section> */}
-    <div className="mb-8 flex flex-wrap justify-center gap-3">
-  <Button
-    variant="outline"
-    className="rounded-full"
-    onClick={() =>
-      navigate("/protection-info", {
-        state: { type: "creator" },
-      })
-    }
-  >
-    How do I get paid? (Creators)
-  </Button>
+      <div className="mb-8 flex flex-wrap justify-center gap-3">
+        <Button
+          variant="outline"
+          className="rounded-full"
+          onClick={() =>
+            navigate("/protection-info", {
+              state: { type: "creator" },
+            })
+          }
+        >
+          How do I get paid? (Creators)
+        </Button>
 
-  <Button
-    variant="outline"
-    className="rounded-full"
-    onClick={() =>
-      navigate("/protection-info", {
-        state: { type: "brand" },
-      })
-    }
-  >
-    How is my money protected? (Brands)
-  </Button>
-</div>
-
-
+        <Button
+          variant="outline"
+          className="rounded-full"
+          onClick={() =>
+            navigate("/protection-info", {
+              state: { type: "brand" },
+            })
+          }
+        >
+          How is my money protected? (Brands)
+        </Button>
+      </div>
 
       {/* CATEGORIES */}
       <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
@@ -592,7 +594,7 @@ export function Landing() {
                   "h-1.5 rounded-full transition-all duration-300",
                   index === creatorsIndex
                     ? "bg-primary w-5"
-                    : "bg-muted-foreground/30 hover:bg-muted-foreground/50 w-1.5"
+                    : "bg-muted-foreground/30 hover:bg-muted-foreground/50 w-1.5",
                 )}
                 onClick={() => creatorsApi?.scrollTo(index)}
                 aria-label={`Go to slide ${index + 1}`}
@@ -672,7 +674,7 @@ export function Landing() {
                   "h-1.5 rounded-full transition-all duration-300",
                   index === brandsIndex
                     ? "bg-primary w-5"
-                    : "bg-muted-foreground/30 hover:bg-muted-foreground/50 w-1.5"
+                    : "bg-muted-foreground/30 hover:bg-muted-foreground/50 w-1.5",
                 )}
                 onClick={() => brandsApi?.scrollTo(index)}
                 aria-label={`Go to slide ${index + 1}`}
@@ -682,25 +684,25 @@ export function Landing() {
         )}
       </section>
       {/* PRAVIXO FLOW */}
-<section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
-  <div className="mb-8 text-center">
-    <h2 className="font-display text-3xl font-bold sm:text-4xl">
-      How Pravixo Works
-    </h2>
+      <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
+        <div className="mb-8 text-center">
+          <h2 className="font-display text-3xl font-bold sm:text-4xl">
+            How Pravixo Works
+          </h2>
 
-    <p className="mt-2 text-muted-foreground">
-      Secure. Transparent. Trusted.
-    </p>
-  </div>
+          <p className="mt-2 text-muted-foreground">
+            Secure. Transparent. Trusted.
+          </p>
+        </div>
 
-  <div className="overflow-hidden rounded-[2rem] border border-border bg-card shadow-elevated">
-    <img
-      src={pravixoFlow}
-      alt="Pravixo Flow"
-      className="w-full object-cover transition-transform duration-500 hover:scale-[1.02]"
-    />
-  </div>
-</section>
+        <div className="overflow-hidden rounded-[2rem] border border-border bg-card shadow-elevated">
+          <img
+            src={pravixoFlow}
+            alt="Pravixo Flow"
+            className="w-full object-cover transition-transform duration-500 hover:scale-[1.02]"
+          />
+        </div>
+      </section>
 
       {/* CTA */}
       <section className="mx-auto max-w-7xl px-4 pb-24 sm:px-6 lg:px-8">
