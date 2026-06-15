@@ -36,7 +36,11 @@ const QuoraIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 import { Badge } from "@/components/ui/badge";
-import { formatFollowers, influencers, CATEGORY_OPTIONS } from "@/data/influencers";
+import {
+  formatFollowers,
+  influencers,
+  CATEGORY_OPTIONS,
+} from "@/data/influencers";
 import { toast } from "sonner";
 import { useAuth } from "@/components/auth-provider";
 import { useQuery, useMutation } from "convex/react";
@@ -45,9 +49,27 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { formatINR } from "@/lib/format";
 import { Id } from "../../convex/_generated/dataModel";
@@ -98,7 +120,7 @@ export function CustomerDash() {
 
   const pendingRequests = useQuery(
     api.connections.getRequestsForBrand,
-    profile ? { brandId: profile._id } : "skip"
+    profile ? { brandId: profile._id } : "skip",
   );
 
   const portfolioImages = useQuery(
@@ -113,7 +135,7 @@ export function CustomerDash() {
 
   const reviews = useQuery(
     api.reviews.listReviewsForCreator,
-    profile ? { creatorId: profile._id, visibleOnly: false } : "skip"
+    profile ? { creatorId: profile._id, visibleOnly: false } : "skip",
   );
 
   const favsQuery = useQuery(
@@ -228,7 +250,10 @@ export function CustomerDash() {
 
   // Handle category and location lists
   const selectedCategories = category
-    ? category.split(",").map((c) => c.trim()).filter(Boolean)
+    ? category
+        .split(",")
+        .map((c) => c.trim())
+        .filter(Boolean)
     : [];
 
   const handleSelectCategory = (val: string) => {
@@ -242,7 +267,10 @@ export function CustomerDash() {
   };
 
   const selectedLocations = location
-    ? location.split(",").map((c) => c.trim()).filter(Boolean)
+    ? location
+        .split(",")
+        .map((c) => c.trim())
+        .filter(Boolean)
     : [];
 
   const handleSelectLocation = (val: string) => {
@@ -342,6 +370,28 @@ export function CustomerDash() {
   const onCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!profile || !e.target.files?.length) return;
     const file = e.target.files[0];
+
+    // Validate image dimensions (1361x450 max)
+    const isImageValid = await new Promise<boolean>((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(img.src);
+        if (img.width > 1361 || img.height > 450) {
+          resolve(false);
+        } else {
+          resolve(true);
+        }
+      };
+      img.onerror = () => resolve(false);
+      img.src = URL.createObjectURL(file);
+    });
+
+    if (!isImageValid) {
+      toast.error("Banner size must be 1361x450 pixels or smaller.");
+      if (coverFileRef.current) coverFileRef.current.value = "";
+      return;
+    }
+
     setUploadingCover(true);
     try {
       const postUrl = await generateUploadUrl();
@@ -526,7 +576,10 @@ export function CustomerDash() {
   const stats = useMemo(() => {
     const totalCamps = campaigns?.length || 0;
     const activeCamps = campaigns?.filter((c: any) => c.active).length || 0;
-    const hiredCount = conversations?.filter((c: any) => c.status === "completed" || c.status === "active").length || 0;
+    const hiredCount =
+      conversations?.filter(
+        (c: any) => c.status === "completed" || c.status === "active",
+      ).length || 0;
     return [
       { label: "Campaigns Posted", value: totalCamps.toString() },
       { label: "Creators Hired", value: hiredCount.toString() },
@@ -604,7 +657,8 @@ export function CustomerDash() {
                       rel="noreferrer"
                       className="flex items-center gap-1 text-primary hover:underline"
                     >
-                      <Globe className="h-3.5 w-3.5" /> {website.replace(/https?:\/\/(www\.)?/, "")}
+                      <Globe className="h-3.5 w-3.5" />{" "}
+                      {website.replace(/https?:\/\/(www\.)?/, "")}
                     </a>
                   )}
                 </div>
@@ -613,7 +667,10 @@ export function CustomerDash() {
           </div>
           <div className="flex gap-2">
             <Link to={`/influencer/${profile?._id}`}>
-              <Button variant="outline" className="rounded-full text-xs font-semibold px-5">
+              <Button
+                variant="outline"
+                className="rounded-full text-xs font-semibold px-5"
+              >
                 View Public Profile
               </Button>
             </Link>
@@ -653,14 +710,18 @@ export function CustomerDash() {
                           {req.creatorProfile?.fullName}
                         </Link>
                         <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                          {new Date(req.createdAt).toLocaleDateString(undefined, {
-                            month: "short",
-                            day: "numeric",
-                          })}
+                          {new Date(req.createdAt).toLocaleDateString(
+                            undefined,
+                            {
+                              month: "short",
+                              day: "numeric",
+                            },
+                          )}
                         </span>
                       </div>
                       <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                        {req.creatorProfile?.category || "Creator"} · {req.creatorProfile?.location || "India"}
+                        {req.creatorProfile?.category || "Creator"} ·{" "}
+                        {req.creatorProfile?.location || "India"}
                       </p>
                       <p className="text-xs text-muted-foreground/95 bg-background border border-border/40 rounded-xl p-2.5 mt-2 italic line-clamp-3">
                         "{req.pitch}"
@@ -674,7 +735,9 @@ export function CustomerDash() {
                       onClick={async () => {
                         try {
                           await acceptConnection({ connectionId: req._id });
-                          toast.success(`Connected with ${req.creatorProfile?.fullName}!`);
+                          toast.success(
+                            `Connected with ${req.creatorProfile?.fullName}!`,
+                          );
                         } catch (err) {
                           toast.error("Failed to accept request");
                         }
@@ -706,10 +769,8 @@ export function CustomerDash() {
 
         {/* MAIN DUAL COLUMN CONTENT */}
         <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_360px] items-start">
-          
           {/* LEFT COLUMN: EDIT SECTIONS */}
           <div className="space-y-6">
-            
             {/* STATS PREVIEW CARDS */}
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
               {stats.map((s) => (
@@ -730,9 +791,10 @@ export function CustomerDash() {
             {/* BRAND PROFILE FORM */}
             <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
               <h2 className="font-display text-lg font-semibold mb-5 flex items-center gap-2">
-                <Building2 className="h-5 w-5 text-primary" /> Edit Brand Details
+                <Building2 className="h-5 w-5 text-primary" /> Edit Brand
+                Details
               </h2>
-              
+
               <div className="mb-6">
                 <div className="flex flex-col sm:flex-row items-center gap-4">
                   <img
@@ -807,7 +869,9 @@ export function CustomerDash() {
                         >
                           <div className="flex flex-wrap gap-1">
                             {selectedCategories.length === 0 ? (
-                              <span className="text-muted-foreground">Select categories...</span>
+                              <span className="text-muted-foreground">
+                                Select categories...
+                              </span>
                             ) : (
                               selectedCategories.map((cat) => (
                                 <Badge
@@ -832,22 +896,38 @@ export function CustomerDash() {
                           </div>
                         </button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                      <PopoverContent
+                        className="w-[var(--radix-popover-trigger-width)] p-0"
+                        align="start"
+                      >
                         <Command>
-                          <CommandInput placeholder="Search categories..." className="h-9" />
+                          <CommandInput
+                            placeholder="Search categories..."
+                            className="h-9"
+                          />
                           <CommandList className="max-h-[200px] overflow-y-auto">
                             <CommandEmpty>No category found.</CommandEmpty>
                             <CommandGroup>
                               {CATEGORY_OPTIONS.map((cat) => {
-                                const isSelected = selectedCategories.includes(cat);
+                                const isSelected =
+                                  selectedCategories.includes(cat);
                                 return (
                                   <CommandItem
                                     key={cat}
                                     onSelect={() => handleSelectCategory(cat)}
                                     className="flex items-center gap-2 cursor-pointer"
                                   >
-                                    <div className={cn("flex h-4 w-4 items-center justify-center rounded-sm border border-primary", isSelected ? "bg-primary text-primary-foreground" : "opacity-50")}>
-                                      {isSelected && <Check className="h-3 w-3" />}
+                                    <div
+                                      className={cn(
+                                        "flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                                        isSelected
+                                          ? "bg-primary text-primary-foreground"
+                                          : "opacity-50",
+                                      )}
+                                    >
+                                      {isSelected && (
+                                        <Check className="h-3 w-3" />
+                                      )}
                                     </div>
                                     {cat}
                                   </CommandItem>
@@ -870,7 +950,9 @@ export function CustomerDash() {
                         >
                           <div className="flex flex-wrap gap-1">
                             {selectedLocations.length === 0 ? (
-                              <span className="text-muted-foreground">Select locations...</span>
+                              <span className="text-muted-foreground">
+                                Select locations...
+                              </span>
                             ) : (
                               selectedLocations.map((loc) => (
                                 <Badge
@@ -895,22 +977,38 @@ export function CustomerDash() {
                           </div>
                         </button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                      <PopoverContent
+                        className="w-[var(--radix-popover-trigger-width)] p-0"
+                        align="start"
+                      >
                         <Command>
-                          <CommandInput placeholder="Search locations..." className="h-9" />
+                          <CommandInput
+                            placeholder="Search locations..."
+                            className="h-9"
+                          />
                           <CommandList className="max-h-[200px] overflow-y-auto">
                             <CommandEmpty>No location found.</CommandEmpty>
                             <CommandGroup>
                               {LOCATION_OPTIONS.map((loc) => {
-                                const isSelected = selectedLocations.includes(loc);
+                                const isSelected =
+                                  selectedLocations.includes(loc);
                                 return (
                                   <CommandItem
                                     key={loc}
                                     onSelect={() => handleSelectLocation(loc)}
                                     className="flex items-center gap-2 cursor-pointer"
                                   >
-                                    <div className={cn("flex h-4 w-4 items-center justify-center rounded-sm border border-primary", isSelected ? "bg-primary text-primary-foreground" : "opacity-50")}>
-                                      {isSelected && <Check className="h-3 w-3" />}
+                                    <div
+                                      className={cn(
+                                        "flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                                        isSelected
+                                          ? "bg-primary text-primary-foreground"
+                                          : "opacity-50",
+                                      )}
+                                    >
+                                      {isSelected && (
+                                        <Check className="h-3 w-3" />
+                                      )}
                                     </div>
                                     {loc}
                                   </CommandItem>
@@ -944,7 +1042,9 @@ export function CustomerDash() {
                     >
                       <option value="">Select size...</option>
                       {COMPANY_SIZE_OPTIONS.map((size) => (
-                        <option key={size} value={size}>{size}</option>
+                        <option key={size} value={size}>
+                          {size}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -963,11 +1063,14 @@ export function CustomerDash() {
                 </div>
 
                 <div className="pt-4 border-t border-border/40">
-                  <h3 className="font-display text-base font-semibold">Social Presence</h3>
+                  <h3 className="font-display text-base font-semibold">
+                    Social Presence
+                  </h3>
                   <p className="text-xs text-muted-foreground mb-4">
-                    Update your company's social handles and follower counts manually.
+                    Update your company's social handles and follower counts
+                    manually.
                   </p>
-                  
+
                   <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
                     <div className="space-y-3 rounded-2xl border border-border p-4 bg-secondary/10">
                       <div className="flex items-center gap-2">
@@ -975,7 +1078,9 @@ export function CustomerDash() {
                         <span className="text-sm font-semibold">Instagram</span>
                       </div>
                       <div className="space-y-1.5">
-                        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Handle</Label>
+                        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                          Handle
+                        </Label>
                         <Input
                           value={instaHandle}
                           onChange={(e) => setInstaHandle(e.target.value)}
@@ -984,11 +1089,15 @@ export function CustomerDash() {
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Followers</Label>
+                        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                          Followers
+                        </Label>
                         <Input
                           type="number"
                           value={instaFollowers}
-                          onChange={(e) => setInstaFollowers(Number(e.target.value))}
+                          onChange={(e) =>
+                            setInstaFollowers(Number(e.target.value))
+                          }
                           className="h-8 text-xs rounded-lg"
                         />
                       </div>
@@ -1000,7 +1109,9 @@ export function CustomerDash() {
                         <span className="text-sm font-semibold">Facebook</span>
                       </div>
                       <div className="space-y-1.5">
-                        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Handle</Label>
+                        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                          Handle
+                        </Label>
                         <Input
                           value={fbHandle}
                           onChange={(e) => setFbHandle(e.target.value)}
@@ -1009,11 +1120,15 @@ export function CustomerDash() {
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Followers</Label>
+                        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                          Followers
+                        </Label>
                         <Input
                           type="number"
                           value={fbFollowers}
-                          onChange={(e) => setFbFollowers(Number(e.target.value))}
+                          onChange={(e) =>
+                            setFbFollowers(Number(e.target.value))
+                          }
                           className="h-8 text-xs rounded-lg"
                         />
                       </div>
@@ -1025,7 +1140,9 @@ export function CustomerDash() {
                         <span className="text-sm font-semibold">LinkedIn</span>
                       </div>
                       <div className="space-y-1.5">
-                        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Handle</Label>
+                        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                          Handle
+                        </Label>
                         <Input
                           value={liHandle}
                           onChange={(e) => setLiHandle(e.target.value)}
@@ -1034,11 +1151,15 @@ export function CustomerDash() {
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Followers</Label>
+                        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                          Followers
+                        </Label>
                         <Input
                           type="number"
                           value={liFollowers}
-                          onChange={(e) => setLiFollowers(Number(e.target.value))}
+                          onChange={(e) =>
+                            setLiFollowers(Number(e.target.value))
+                          }
                           className="h-8 text-xs rounded-lg"
                         />
                       </div>
@@ -1050,7 +1171,9 @@ export function CustomerDash() {
                         <span className="text-sm font-semibold">YouTube</span>
                       </div>
                       <div className="space-y-1.5">
-                        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Handle</Label>
+                        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                          Handle
+                        </Label>
                         <Input
                           value={ytHandle}
                           onChange={(e) => setYtHandle(e.target.value)}
@@ -1059,11 +1182,15 @@ export function CustomerDash() {
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Followers</Label>
+                        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                          Followers
+                        </Label>
                         <Input
                           type="number"
                           value={ytFollowers}
-                          onChange={(e) => setYtFollowers(Number(e.target.value))}
+                          onChange={(e) =>
+                            setYtFollowers(Number(e.target.value))
+                          }
                           className="h-8 text-xs rounded-lg"
                         />
                       </div>
@@ -1075,7 +1202,9 @@ export function CustomerDash() {
                         <span className="text-sm font-semibold">Quora</span>
                       </div>
                       <div className="space-y-1.5">
-                        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Handle</Label>
+                        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                          Handle
+                        </Label>
                         <Input
                           value={quoraHandle}
                           onChange={(e) => setQuoraHandle(e.target.value)}
@@ -1084,11 +1213,15 @@ export function CustomerDash() {
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Followers</Label>
+                        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                          Followers
+                        </Label>
                         <Input
                           type="number"
                           value={quoraFollowers}
-                          onChange={(e) => setQuoraFollowers(Number(e.target.value))}
+                          onChange={(e) =>
+                            setQuoraFollowers(Number(e.target.value))
+                          }
                           className="h-8 text-xs rounded-lg"
                         />
                       </div>
@@ -1097,10 +1230,14 @@ export function CustomerDash() {
                     <div className="space-y-3 rounded-2xl border border-border p-4 bg-secondary/10">
                       <div className="flex items-center gap-2">
                         <Twitter className="h-4 w-4 text-sky-500" />
-                        <span className="text-sm font-semibold">X / Twitter</span>
+                        <span className="text-sm font-semibold">
+                          X / Twitter
+                        </span>
                       </div>
                       <div className="space-y-1.5">
-                        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Handle</Label>
+                        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                          Handle
+                        </Label>
                         <Input
                           value={twHandle}
                           onChange={(e) => setTwHandle(e.target.value)}
@@ -1109,11 +1246,15 @@ export function CustomerDash() {
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Followers</Label>
+                        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                          Followers
+                        </Label>
                         <Input
                           type="number"
                           value={twFollowers}
-                          onChange={(e) => setTwFollowers(Number(e.target.value))}
+                          onChange={(e) =>
+                            setTwFollowers(Number(e.target.value))
+                          }
                           className="h-8 text-xs rounded-lg"
                         />
                       </div>
@@ -1135,7 +1276,9 @@ export function CustomerDash() {
 
             {/* BRAND GALLERY */}
             <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-              <h2 className="font-display text-lg font-semibold mb-2">Brand Gallery</h2>
+              <h2 className="font-display text-lg font-semibold mb-2">
+                Brand Gallery
+              </h2>
               <p className="text-xs text-muted-foreground mb-4">
                 Showcase products, campaign banners, teams, or advertisements.
               </p>
@@ -1180,9 +1323,12 @@ export function CustomerDash() {
             <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
               <div className="flex items-center justify-between mb-2">
                 <div>
-                  <h2 className="font-display text-lg font-semibold">Open Campaigns</h2>
+                  <h2 className="font-display text-lg font-semibold">
+                    Open Campaigns
+                  </h2>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Create and manage active campaign listings visible to creators.
+                    Create and manage active campaign listings visible to
+                    creators.
                   </p>
                 </div>
                 <Button
@@ -1200,11 +1346,18 @@ export function CustomerDash() {
                 </div>
               ) : campaigns.length === 0 ? (
                 <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-12 text-center">
-                  <p className="font-display font-semibold text-sm">No campaigns listed yet</p>
-                  <p className="mt-1 text-xs text-muted-foreground max-w-[280px]">
-                    Add campaign listings to invite pitches and applications from top creators.
+                  <p className="font-display font-semibold text-sm">
+                    No campaigns listed yet
                   </p>
-                  <Button size="sm" className="mt-4 rounded-full" onClick={openAddCampaignModal}>
+                  <p className="mt-1 text-xs text-muted-foreground max-w-[280px]">
+                    Add campaign listings to invite pitches and applications
+                    from top creators.
+                  </p>
+                  <Button
+                    size="sm"
+                    className="mt-4 rounded-full"
+                    onClick={openAddCampaignModal}
+                  >
                     Create your first campaign
                   </Button>
                 </div>
@@ -1220,12 +1373,17 @@ export function CustomerDash() {
                           <h4 className="font-display text-sm font-bold text-foreground line-clamp-1">
                             {camp.title}
                           </h4>
-                          <Badge variant={camp.active ? "default" : "secondary"} className="rounded-full text-[9px] px-2 py-0">
+                          <Badge
+                            variant={camp.active ? "default" : "secondary"}
+                            className="rounded-full text-[9px] px-2 py-0"
+                          >
                             {camp.active ? "Active" : "Draft"}
                           </Badge>
                         </div>
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground mt-1">
-                          <span className="font-semibold text-gradient-sunset">{camp.budget}</span>
+                          <span className="font-semibold text-gradient-sunset">
+                            {camp.budget}
+                          </span>
                           <span>·</span>
                           <span>{camp.duration}</span>
                           <span>·</span>
@@ -1258,9 +1416,12 @@ export function CustomerDash() {
 
             {/* REVIEWS VISIBILITY SETTINGS */}
             <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-              <h2 className="font-display text-lg font-semibold mb-2">Reviews from Creators</h2>
+              <h2 className="font-display text-lg font-semibold mb-2">
+                Reviews from Creators
+              </h2>
               <p className="text-xs text-muted-foreground mb-4">
-                Toggle display visibility of feedback and ratings left by creators.
+                Toggle display visibility of feedback and ratings left by
+                creators.
               </p>
 
               {!reviews ? (
@@ -1270,9 +1431,12 @@ export function CustomerDash() {
               ) : reviews.length === 0 ? (
                 <div className="py-8 text-center border border-dashed border-border rounded-xl">
                   <Star className="mx-auto h-8 w-8 text-muted-foreground/30 mb-2" />
-                  <p className="font-semibold text-sm text-muted-foreground">No creator reviews received yet</p>
+                  <p className="font-semibold text-sm text-muted-foreground">
+                    No creator reviews received yet
+                  </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Reviews from completed creator collaborations will appear here.
+                    Reviews from completed creator collaborations will appear
+                    here.
                   </p>
                 </div>
               ) : (
@@ -1298,7 +1462,10 @@ export function CustomerDash() {
                                 {review.brandName}
                               </h4>
                               {review.campaignRef && (
-                                <Badge variant="secondary" className="text-[9px] rounded-full">
+                                <Badge
+                                  variant="secondary"
+                                  className="text-[9px] rounded-full"
+                                >
                                   {review.campaignRef}
                                 </Badge>
                               )}
@@ -1309,20 +1476,28 @@ export function CustomerDash() {
                                   <Star
                                     key={star}
                                     className={`h-2.5 w-2.5 ${
-                                      star <= review.rating ? "fill-amber text-amber" : "text-muted-foreground/30"
+                                      star <= review.rating
+                                        ? "fill-amber text-amber"
+                                        : "text-muted-foreground/30"
                                     }`}
                                   />
                                 ))}
                               </div>
                               <span className="text-[9px] text-muted-foreground">
-                                {new Date(review.createdAt).toLocaleDateString()}
+                                {new Date(
+                                  review.createdAt,
+                                ).toLocaleDateString()}
                               </span>
                             </div>
                           </div>
                         </div>
                         <div className="mt-2 text-xs">
-                          <p className="font-semibold text-foreground">{review.title}</p>
-                          <p className="text-muted-foreground mt-0.5">{review.text}</p>
+                          <p className="font-semibold text-foreground">
+                            {review.title}
+                          </p>
+                          <p className="text-muted-foreground mt-0.5">
+                            {review.text}
+                          </p>
                         </div>
                       </div>
 
@@ -1332,12 +1507,16 @@ export function CustomerDash() {
                             Public Display
                           </span>
                           <span className="block text-[10px] text-muted-foreground">
-                            {review.visible ? "Shown on profile" : "Hidden from profile"}
+                            {review.visible
+                              ? "Shown on profile"
+                              : "Hidden from profile"}
                           </span>
                         </div>
                         <Switch
                           checked={review.visible}
-                          onCheckedChange={() => handleToggleVisibility(review._id)}
+                          onCheckedChange={() =>
+                            handleToggleVisibility(review._id)
+                          }
                         />
                       </div>
                     </div>
@@ -1345,20 +1524,24 @@ export function CustomerDash() {
                 </div>
               )}
             </div>
-
           </div>
 
           {/* RIGHT COLUMN: SIDEBAR */}
           <div className="space-y-6">
-            
             {/* HIRING PREFERENCES PANEL */}
             <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
               <h2 className="font-display text-lg font-semibold mb-4 flex items-center gap-2">
                 <Filter className="h-5 w-5 text-primary" /> Hiring Preferences
               </h2>
-              <form onSubmit={handleSavePreferences} className="space-y-4 text-sm">
+              <form
+                onSubmit={handleSavePreferences}
+                className="space-y-4 text-sm"
+              >
                 <div className="space-y-1.5">
-                  <Label htmlFor="prefNiches" className="text-xs font-semibold text-muted-foreground">
+                  <Label
+                    htmlFor="prefNiches"
+                    className="text-xs font-semibold text-muted-foreground"
+                  >
                     Target Niches
                   </Label>
                   <Input
@@ -1370,7 +1553,10 @@ export function CustomerDash() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="prefBudget" className="text-xs font-semibold text-muted-foreground">
+                  <Label
+                    htmlFor="prefBudget"
+                    className="text-xs font-semibold text-muted-foreground"
+                  >
                     Campaign Budget Range
                   </Label>
                   <Input
@@ -1382,7 +1568,10 @@ export function CustomerDash() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="prefReach" className="text-xs font-semibold text-muted-foreground">
+                  <Label
+                    htmlFor="prefReach"
+                    className="text-xs font-semibold text-muted-foreground"
+                  >
                     Target Creator Reach
                   </Label>
                   <Input
@@ -1394,7 +1583,10 @@ export function CustomerDash() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="prefRegions" className="text-xs font-semibold text-muted-foreground">
+                  <Label
+                    htmlFor="prefRegions"
+                    className="text-xs font-semibold text-muted-foreground"
+                  >
                     Preferred Regions
                   </Label>
                   <Input
@@ -1411,7 +1603,9 @@ export function CustomerDash() {
                   className="w-full rounded-full gradient-sunset border-0 text-white shadow-glow mt-4"
                 >
                   <Save className="mr-1.5 h-4 w-4" />{" "}
-                  {savingPrefs ? "Updating Preferences..." : "Update Preferences"}
+                  {savingPrefs
+                    ? "Updating Preferences..."
+                    : "Update Preferences"}
                 </Button>
               </form>
             </div>
@@ -1421,16 +1615,23 @@ export function CustomerDash() {
               <div className="mb-4 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Bookmark className="h-5 w-5 text-primary" />
-                  <h2 className="font-display text-base font-semibold">Saved Creators</h2>
+                  <h2 className="font-display text-base font-semibold">
+                    Saved Creators
+                  </h2>
                 </div>
-                <Link to="/browse" className="text-xs font-medium text-primary hover:underline">
+                <Link
+                  to="/browse"
+                  className="text-xs font-medium text-primary hover:underline"
+                >
                   Browse
                 </Link>
               </div>
 
               {saved.length === 0 ? (
                 <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-8 text-center">
-                  <p className="text-xs font-medium text-muted-foreground">No saved creators yet</p>
+                  <p className="text-xs font-medium text-muted-foreground">
+                    No saved creators yet
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -1473,12 +1674,16 @@ export function CustomerDash() {
             <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
               <div className="mb-4 flex items-center gap-2">
                 <History className="h-5 w-5 text-primary" />
-                <h2 className="font-display text-base font-semibold">Collaboration History</h2>
+                <h2 className="font-display text-base font-semibold">
+                  Collaboration History
+                </h2>
               </div>
 
               {!conversations || conversations.length === 0 ? (
                 <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-8 text-center">
-                  <p className="text-xs font-medium text-muted-foreground">No collaborations initiated</p>
+                  <p className="text-xs font-medium text-muted-foreground">
+                    No collaborations initiated
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -1506,7 +1711,8 @@ export function CustomerDash() {
                             {creator.fullName}
                           </Link>
                           <p className="text-[10px] text-muted-foreground truncate">
-                            {creator.category || "General"} · {creator.location || "India"}
+                            {creator.category || "General"} ·{" "}
+                            {creator.location || "India"}
                           </p>
                         </div>
                         <Badge
@@ -1526,7 +1732,9 @@ export function CustomerDash() {
             <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
               <div className="mb-4 flex items-center gap-2">
                 <Clock className="h-5 w-5 text-primary" />
-                <h2 className="font-display text-base font-semibold">Recent searches</h2>
+                <h2 className="font-display text-base font-semibold">
+                  Recent searches
+                </h2>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {recent.map((q) => (
@@ -1541,9 +1749,7 @@ export function CustomerDash() {
                 ))}
               </div>
             </div>
-
           </div>
-
         </div>
       </div>
 
@@ -1555,7 +1761,8 @@ export function CustomerDash() {
               {editingCampaign ? "Edit Campaign" : "Add Campaign"}
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
-              Define the collaboration campaign specifics for creators to view and apply.
+              Define the collaboration campaign specifics for creators to view
+              and apply.
             </DialogDescription>
           </DialogHeader>
 
@@ -1616,10 +1823,7 @@ export function CustomerDash() {
                   If active, creators can search and apply for this campaign.
                 </span>
               </div>
-              <Switch
-                checked={campActive}
-                onCheckedChange={setCampActive}
-              />
+              <Switch checked={campActive} onCheckedChange={setCampActive} />
             </div>
 
             <DialogFooter className="pt-2 flex gap-2">
@@ -1636,7 +1840,11 @@ export function CustomerDash() {
                 disabled={savingCampaign}
                 className="rounded-full flex-1 gradient-sunset border-0 text-white shadow-glow"
               >
-                {savingCampaign ? "Saving..." : editingCampaign ? "Save Changes" : "Create Listing"}
+                {savingCampaign
+                  ? "Saving..."
+                  : editingCampaign
+                    ? "Save Changes"
+                    : "Create Listing"}
               </Button>
             </DialogFooter>
           </form>

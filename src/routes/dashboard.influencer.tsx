@@ -152,7 +152,7 @@ export function CreatorDash() {
   // Reviews queries and mutations
   const reviews = useQuery(
     api.reviews.listReviewsForCreator,
-    profile ? { creatorId: profile._id, visibleOnly: false } : "skip"
+    profile ? { creatorId: profile._id, visibleOnly: false } : "skip",
   );
   const toggleVisibility = useMutation(api.reviews.toggleReviewVisibility);
 
@@ -184,9 +184,9 @@ export function CreatorDash() {
 
   const selectedCategories = category
     ? category
-      .split(",")
-      .map((c) => c.trim())
-      .filter(Boolean)
+        .split(",")
+        .map((c) => c.trim())
+        .filter(Boolean)
     : [];
 
   const handleSelectCategory = (val: string) => {
@@ -201,9 +201,9 @@ export function CreatorDash() {
 
   const selectedLocations = location
     ? location
-      .split(",")
-      .map((c) => c.trim())
-      .filter(Boolean)
+        .split(",")
+        .map((c) => c.trim())
+        .filter(Boolean)
     : [];
 
   const handleSelectLocation = (val: string) => {
@@ -397,6 +397,28 @@ export function CreatorDash() {
   const onCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!profile || !e.target.files?.length) return;
     const file = e.target.files[0];
+
+    // Validate image dimensions (1361x450 max)
+    const isImageValid = await new Promise<boolean>((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(img.src);
+        if (img.width > 1361 || img.height > 450) {
+          resolve(false);
+        } else {
+          resolve(true);
+        }
+      };
+      img.onerror = () => resolve(false);
+      img.src = URL.createObjectURL(file);
+    });
+
+    if (!isImageValid) {
+      toast.error("Banner size must be 1361x450 pixels or smaller.");
+      if (coverFileRef.current) coverFileRef.current.value = "";
+      return;
+    }
+
     setUploadingCover(true);
     try {
       const postUrl = await generateUploadUrl();
@@ -503,33 +525,43 @@ export function CreatorDash() {
               value: profile?.bookings?.toLocaleString() || "0",
               // delta: "+4",
             },
-          ].map((s: { icon: React.ComponentType<{ className?: string }>; label: string; value: string; delta?: string }, idx) => (
-            <div
-              key={s.label}
-              className={cn(
-                "rounded-3xl border border-border bg-card p-6",
-                idx === 2 && "col-span-2 md:col-span-1"
-              )}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent text-accent-foreground">
-                  <s.icon className="h-5 w-5" />
-                </div>
-                {s.delta && (
-                  <Badge
-                    variant="secondary"
-                    className="rounded-full text-xs text-emerald-600"
-                  >
-                    {s.delta}
-                  </Badge>
+          ].map(
+            (
+              s: {
+                icon: React.ComponentType<{ className?: string }>;
+                label: string;
+                value: string;
+                delta?: string;
+              },
+              idx,
+            ) => (
+              <div
+                key={s.label}
+                className={cn(
+                  "rounded-3xl border border-border bg-card p-6",
+                  idx === 2 && "col-span-2 md:col-span-1",
                 )}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent text-accent-foreground">
+                    <s.icon className="h-5 w-5" />
+                  </div>
+                  {s.delta && (
+                    <Badge
+                      variant="secondary"
+                      className="rounded-full text-xs text-emerald-600"
+                    >
+                      {s.delta}
+                    </Badge>
+                  )}
+                </div>
+                <div className="mt-4 font-display text-3xl font-bold">
+                  {s.value}
+                </div>
+                <div className="text-sm text-muted-foreground">{s.label}</div>
               </div>
-              <div className="mt-4 font-display text-3xl font-bold">
-                {s.value}
-              </div>
-              <div className="text-sm text-muted-foreground">{s.label}</div>
-            </div>
-          ))}
+            ),
+          )}
         </div>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-3 items-start">
@@ -797,7 +829,9 @@ export function CreatorDash() {
               <div className="space-y-3 rounded-2xl border border-border p-3 sm:p-4 bg-muted/20">
                 <div className="flex items-center gap-2">
                   <Instagram className="h-4 w-4 text-pink-600" />
-                  <span className="text-sm font-semibold text-ellipsis overflow-hidden whitespace-nowrap">Instagram</span>
+                  <span className="text-sm font-semibold text-ellipsis overflow-hidden whitespace-nowrap">
+                    Instagram
+                  </span>
                 </div>
                 <div>
                   <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -827,7 +861,9 @@ export function CreatorDash() {
               <div className="space-y-3 rounded-2xl border border-border p-3 sm:p-4 bg-muted/20">
                 <div className="flex items-center gap-2">
                   <Facebook className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm font-semibold text-ellipsis overflow-hidden whitespace-nowrap">Facebook</span>
+                  <span className="text-sm font-semibold text-ellipsis overflow-hidden whitespace-nowrap">
+                    Facebook
+                  </span>
                 </div>
                 <div>
                   <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -857,7 +893,9 @@ export function CreatorDash() {
               <div className="space-y-3 rounded-2xl border border-border p-3 sm:p-4 bg-muted/20">
                 <div className="flex items-center gap-2">
                   <Linkedin className="h-4 w-4 text-blue-800" />
-                  <span className="text-sm font-semibold text-ellipsis overflow-hidden whitespace-nowrap">LinkedIn</span>
+                  <span className="text-sm font-semibold text-ellipsis overflow-hidden whitespace-nowrap">
+                    LinkedIn
+                  </span>
                 </div>
                 <div>
                   <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -887,7 +925,9 @@ export function CreatorDash() {
               <div className="space-y-3 rounded-2xl border border-border p-3 sm:p-4 bg-muted/20">
                 <div className="flex items-center gap-2">
                   <Youtube className="h-4 w-4 text-red-600" />
-                  <span className="text-sm font-semibold text-ellipsis overflow-hidden whitespace-nowrap">YouTube</span>
+                  <span className="text-sm font-semibold text-ellipsis overflow-hidden whitespace-nowrap">
+                    YouTube
+                  </span>
                 </div>
                 <div>
                   <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -917,7 +957,9 @@ export function CreatorDash() {
               <div className="space-y-3 rounded-2xl border border-border p-3 sm:p-4 bg-muted/20">
                 <div className="flex items-center gap-2">
                   <QuoraIcon className="h-4 w-4 text-red-700" />
-                  <span className="text-sm font-semibold text-ellipsis overflow-hidden whitespace-nowrap">Quora</span>
+                  <span className="text-sm font-semibold text-ellipsis overflow-hidden whitespace-nowrap">
+                    Quora
+                  </span>
                 </div>
                 <div>
                   <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -947,7 +989,9 @@ export function CreatorDash() {
               <div className="space-y-3 rounded-2xl border border-border p-3 sm:p-4 bg-muted/20">
                 <div className="flex items-center gap-2">
                   <Twitter className="h-4 w-4 text-sky-500" />
-                  <span className="text-sm font-semibold text-ellipsis overflow-hidden whitespace-nowrap">X (Twitter)</span>
+                  <span className="text-sm font-semibold text-ellipsis overflow-hidden whitespace-nowrap">
+                    X (Twitter)
+                  </span>
                 </div>
                 <div>
                   <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -1090,7 +1134,9 @@ export function CreatorDash() {
         {/* Reviews Section */}
         <div className="mt-8 rounded-3xl border border-border bg-card p-6">
           <div className="mb-6">
-            <h2 className="font-display text-lg font-semibold">Reviews & Feedback</h2>
+            <h2 className="font-display text-lg font-semibold">
+              Reviews & Feedback
+            </h2>
             <p className="text-xs text-muted-foreground mt-0.5">
               Manage reviews displayed on your public profile page.
             </p>
@@ -1103,7 +1149,9 @@ export function CreatorDash() {
           ) : reviews.length === 0 ? (
             <div className="py-12 text-center border border-dashed border-border rounded-2xl">
               <Star className="mx-auto h-8 w-8 text-muted-foreground/30 mb-2" />
-              <p className="font-semibold text-sm text-muted-foreground">No reviews received yet</p>
+              <p className="font-semibold text-sm text-muted-foreground">
+                No reviews received yet
+              </p>
               <p className="text-xs text-muted-foreground mt-1">
                 Reviews left by brands you collaborate with will appear here.
               </p>
@@ -1131,7 +1179,10 @@ export function CreatorDash() {
                             {review.brandName}
                           </h4>
                           {review.campaignRef && (
-                            <Badge variant="secondary" className="text-[10px] rounded-full">
+                            <Badge
+                              variant="secondary"
+                              className="text-[10px] rounded-full"
+                            >
                               Campaign: {review.campaignRef}
                             </Badge>
                           )}
@@ -1150,11 +1201,14 @@ export function CreatorDash() {
                             ))}
                           </div>
                           <span className="text-[10px] text-muted-foreground">
-                            {new Date(review.createdAt).toLocaleDateString(undefined, {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            })}
+                            {new Date(review.createdAt).toLocaleDateString(
+                              undefined,
+                              {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              },
+                            )}
                           </span>
                         </div>
                       </div>
@@ -1176,7 +1230,9 @@ export function CreatorDash() {
                         Public Display
                       </span>
                       <span className="block text-[10px] text-muted-foreground">
-                        {review.visible ? "Shown on public profile" : "Hidden from public"}
+                        {review.visible
+                          ? "Shown on public profile"
+                          : "Hidden from public"}
                       </span>
                     </div>
                     <Switch
