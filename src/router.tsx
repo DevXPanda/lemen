@@ -9,6 +9,7 @@ import { Profile, loader as profileLoader } from "./routes/influencer.$id";
 import { CustomerDash } from "./routes/dashboard.customer";
 import { CreatorDash } from "./routes/dashboard.influencer";
 import { ResetPassword } from "./routes/reset-password";
+import  ProtectionInfo  from "./routes/ProtectionInfo";
 
 function DefaultErrorComponent() {
   const error = useRouteError() as Error;
@@ -98,6 +99,10 @@ export const router = createBrowserRouter([
       {
         path: "/dashboard/influencer",
         element: <CreatorDash />,
+      },
+      {
+        path: "/protection-info",
+        element: <ProtectionInfo />,
       },
       {
         path: "*",

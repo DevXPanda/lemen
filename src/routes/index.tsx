@@ -26,9 +26,27 @@ import { api } from "../../convex/_generated/api";
 import heroBanner from "@/assets/hero-banner.jpg";
 import pravixoFlow from "@/assets/pravixo-flow.jpeg";
 
+// export function Landing() {
+//   const navigate = useNavigate();
+//   const { user, profile } = useAuth();
+//   const [showAuthModal, setShowAuthModal] = useState(false);
+//   const [pendingRedirectUrl, setPendingRedirectUrl] = useState("");
+
+//   const handleCreatorCardClick = (creatorId: string) => {
+//     setPendingRedirectUrl(`/influencer/${creatorId}`);
+//     setShowAuthModal(true);
+//   };
+//   const [searchQuery, setSearchQuery] = useState("");
+//   const [searchQuery, setSearchQuery] = useState("");
+
+// // 👇 Ye naya state add karna hai
+// const [activeInfo, setActiveInfo] = useState<
+//   "creator" | "brand" | null
+// >(null);
 export function Landing() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
+
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [pendingRedirectUrl, setPendingRedirectUrl] = useState("");
 
@@ -36,8 +54,17 @@ export function Landing() {
     setPendingRedirectUrl(`/influencer/${creatorId}`);
     setShowAuthModal(true);
   };
+
   const [searchQuery, setSearchQuery] = useState("");
 
+  // ✅ Yahi add karna hai
+  const [activeInfo, setActiveInfo] = useState<
+    "creator" | "brand" | null
+  >(null);
+
+  useEffect(() => {
+    document.title = "Lumen — Hire creators that move the needle";
+  }, []);
   useEffect(() => {
     document.title = "Lumen — Hire creators that move the needle";
   }, []);
@@ -262,6 +289,33 @@ export function Landing() {
           ))}
         </div>
       </section> */}
+    <div className="mb-8 flex flex-wrap justify-center gap-3">
+  <Button
+    variant="outline"
+    className="rounded-full"
+    onClick={() =>
+      navigate("/protection-info", {
+        state: { type: "creator" },
+      })
+    }
+  >
+    How do I get paid? (Creators)
+  </Button>
+
+  <Button
+    variant="outline"
+    className="rounded-full"
+    onClick={() =>
+      navigate("/protection-info", {
+        state: { type: "brand" },
+      })
+    }
+  >
+    How is my money protected? (Brands)
+  </Button>
+</div>
+
+
 
       {/* CATEGORIES */}
       <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
