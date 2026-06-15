@@ -56,7 +56,7 @@ function FeaturedProfileCard({
       }}
       className="group flex flex-col h-full overflow-hidden rounded-3xl border border-border bg-card transition-all hover:shadow-elevated"
     >
-      <div className="relative h-24 sm:h-40 overflow-hidden">
+      <div className="relative w-full aspect-[1361/450] overflow-hidden">
         <img
           src={inf.cover}
           alt=""
@@ -529,7 +529,7 @@ export function Landing() {
           </div>
           <div className="flex items-center gap-4">
             <Link
-              to="/browse"
+              to="/browse?role=creator"
               className="hidden text-sm font-medium text-primary hover:underline sm:block"
             >
               View all →
@@ -615,27 +615,35 @@ export function Landing() {
               Vetted brands hiring creators today.
             </p>
           </div>
-          <div className="flex items-center gap-1.5">
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8 rounded-full border-border bg-card hover:bg-accent"
-              onClick={() => brandsApi?.scrollPrev()}
-              disabled={!brandsApi?.canScrollPrev()}
-              aria-label="Previous slide"
+          <div className="flex items-center gap-4">
+            <Link
+              to="/browse?role=brand"
+              className="hidden text-sm font-medium text-primary hover:underline sm:block"
             >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8 rounded-full border-border bg-card hover:bg-accent"
-              onClick={() => brandsApi?.scrollNext()}
-              disabled={!brandsApi?.canScrollNext()}
-              aria-label="Next slide"
-            >
-              <ArrowRight className="h-4 w-4" />
-            </Button>
+              View all →
+            </Link>
+            <div className="flex items-center gap-1.5">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8 rounded-full border-border bg-card hover:bg-accent"
+                onClick={() => brandsApi?.scrollPrev()}
+                disabled={!brandsApi?.canScrollPrev()}
+                aria-label="Previous slide"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8 rounded-full border-border bg-card hover:bg-accent"
+                onClick={() => brandsApi?.scrollNext()}
+                disabled={!brandsApi?.canScrollNext()}
+                aria-label="Next slide"
+              >
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
 

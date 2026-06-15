@@ -835,19 +835,6 @@ export function Profile() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="relative aspect-[1361/450] overflow-hidden w-full rounded-b-2xl sm:rounded-b-3xl rounded-t-none shadow-sm border border-border/50">
           <img src={inf.cover} alt="" className="h-full w-full object-cover" />
-          {/* Subtle dark overlay for professional presentation */}
-          <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px]" />
-          <div className="absolute left-4 top-4 sm:left-6 sm:top-6 z-20">
-            <Link to="/browse">
-              <Button
-                variant="secondary"
-                size="sm"
-                className="rounded-full backdrop-blur shadow-sm bg-background/85 hover:bg-background transition-colors"
-              >
-                <ArrowLeft className="mr-1 h-4 w-4" /> Back
-              </Button>
-            </Link>
-          </div>
         </div>
       </div>
 

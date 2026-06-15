@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import {
   formatFollowers,
   influencers,
+  mockBrands,
   type Influencer,
   CATEGORY_OPTIONS,
 } from "@/data/influencers";
@@ -19,6 +20,7 @@ import { api } from "../../convex/_generated/api";
 
 export function Browse() {
   const [searchParams] = useSearchParams();
+  const role = searchParams.get("role") || "creator";
   const [query, setQuery] = useState(searchParams.get("search") || "");
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -31,8 +33,8 @@ export function Browse() {
   };
 
   useEffect(() => {
-    document.title = "Browse creators — Lumen";
-  }, []);
+    document.title = `Browse ${role === "brand" ? "brands" : "creators"} — Lumen`;
+  }, [role]);
   const [activeCats, setActiveCats] = useState<string[]>([]);
   const [price, setPrice] = useState<number[]>([150000]);
   const [followers, setFollowers] = useState<number[]>([3000000]);
@@ -40,14 +42,14 @@ export function Browse() {
   const [availableOnly, setAvailableOnly] = useState(false);
   const [open, setOpen] = useState(false);
 
-  const liveCreators = useQuery(api.profiles.list, {
-    role: "creator",
+  const liveProfiles = useQuery(api.profiles.list, {
+    role: role,
     search: query,
   });
 
   const allInfluencers = useMemo(() => {
-    const creators = liveCreators || [];
-    const live = creators.map(
+    const profiles = liveProfiles || [];
+    const live = profiles.map(
       (p) =>
         ({
           id: p._id,
@@ -76,8 +78,9 @@ export function Browse() {
         }) as Influencer,
     );
 
-    return [...live, ...influencers];
-  }, [liveCreators]);
+    const mockData = role === "brand" ? mockBrands : influencers;
+    return [...live, ...mockData];
+  }, [liveProfiles, role]);
 
   const ranges = useMemo(() => {
     const pricesList = allInfluencers
@@ -268,11 +271,11 @@ export function Browse() {
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-display text-3xl font-bold sm:text-4xl">
-            Browse creators
+          <h1 className="font-display text-3xl font-bold sm:text-4xl capitalize">
+            Browse {role === "brand" ? "brands" : "creators"}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {filtered.length} creators match your filters
+            {filtered.length} {role === "brand" ? "brands" : "creators"} match your filters
           </p>
         </div>
         <div className="flex items-center gap-2 rounded-full border border-border bg-card p-1.5 shadow-soft sm:w-96">
@@ -280,7 +283,7 @@ export function Browse() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search creators…"
+            placeholder={role === "brand" ? "Search brands…" : "Search creators…"}
             className="flex-1 bg-transparent text-sm outline-none"
           />
           <Button
@@ -327,7 +330,7 @@ export function Browse() {
                 <Search className="h-7 w-7 text-muted-foreground" />
               </div>
               <h3 className="font-display text-lg font-semibold">
-                No creators found
+                No {role === "brand" ? "brands" : "creators"} found
               </h3>
               <p className="mt-1 max-w-xs text-sm text-muted-foreground">
                 Try widening your filters or clearing your search.
@@ -347,7 +350,7 @@ export function Browse() {
                   }}
                   className="group flex flex-col overflow-hidden rounded-3xl border border-border bg-card transition-all hover:shadow-none"
                 >
-                  <div className="relative h-24 sm:h-32 overflow-hidden">
+                  <div className="relative w-full aspect-[1361/450] overflow-hidden">
                     <img
                       src={inf.cover}
                       alt=""
@@ -415,7 +418,7 @@ export function Browse() {
               Sign In Required
             </h3>
             <p className="mt-2 text-sm text-muted-foreground">
-              Please sign in to view creator details.
+              Please sign in to view {role === "brand" ? "brand" : "creator"} details.
             </p>
             <div className="mt-6 flex justify-end gap-3">
               <Button
