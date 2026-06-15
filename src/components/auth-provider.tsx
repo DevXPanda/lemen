@@ -45,6 +45,8 @@ export type Profile = {
   prefBudget?: string;
   prefReach?: string;
   prefRegions?: string;
+  website?: string;
+  companySize?: string;
 };
 
 type AuthCtx = {

@@ -9,7 +9,8 @@ import { Profile, loader as profileLoader } from "./routes/influencer.$id";
 import { CustomerDash } from "./routes/dashboard.customer";
 import { CreatorDash } from "./routes/dashboard.influencer";
 import { ResetPassword } from "./routes/reset-password";
-import  ProtectionInfo  from "./routes/ProtectionInfo";
+import ProtectionInfo from "./routes/ProtectionInfo";
+import { ConnectionsPage } from "./routes/connections";
 
 function DefaultErrorComponent() {
   const error = useRouteError() as Error;
@@ -86,6 +87,10 @@ export const router = createBrowserRouter([
       {
         path: "/messages",
         element: <MessagesPage />,
+      },
+      {
+        path: "/connections",
+        element: <ConnectionsPage />,
       },
       {
         path: "/influencer/:id",

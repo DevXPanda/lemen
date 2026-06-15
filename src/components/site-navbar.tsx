@@ -7,13 +7,14 @@ import {
   X,
   LogOut,
   MessageSquare,
+  UserPlus,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTheme } from "./theme-provider";
 import { useAuth } from "./auth-provider";
 import { Button } from "./ui/button";
 import { toast } from "sonner";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { ChatDialog } from "./chat-dialog";
 import { Id } from "../../convex/_generated/dataModel";
@@ -38,6 +39,40 @@ export function SiteNavbar() {
     null,
   );
 
+  const [showConnections, setShowConnections] = useState(false);
+  const connectionsRef = useRef<HTMLDivElement>(null);
+
+  const connectionNotificationCount = useQuery(
+    api.connections.getNavbarNotificationCount,
+    profile ? { profileId: profile._id, role: profile.role } : "skip"
+  ) || 0;
+
+  const brandConnections = useQuery(
+    api.connections.getRequestsForBrand,
+    profile && profile.role === "brand" ? { brandId: profile._id } : "skip"
+  );
+
+  const creatorConnections = useQuery(
+    api.connections.getRequestsForCreator,
+    profile && profile.role === "creator" ? { creatorId: profile._id } : "skip"
+  );
+
+  const acceptConnection = useMutation(api.connections.acceptRequest);
+  const rejectConnection = useMutation(api.connections.rejectRequest);
+  const markCreatorNotificationsSeen = useMutation(api.connections.markCreatorNotificationsSeen);
+
+  const handleToggleConnections = async () => {
+    const nextVal = !showConnections;
+    setShowConnections(nextVal);
+    if (nextVal && profile?.role === "creator") {
+      try {
+        await markCreatorNotificationsSeen({ creatorId: profile._id });
+      } catch (err) {
+        console.error("Failed to mark notifications as seen", err);
+      }
+    }
+  };
+
   const conversations = useQuery(
     api.messages.getConversations,
     profile ? { profileId: profile._id, role: profile.role } : "skip",
@@ -52,6 +87,12 @@ export function SiteNavbar() {
         !messagesRef.current.contains(event.target as Node)
       ) {
         setShowNotifs(false);
+      }
+      if (
+        connectionsRef.current &&
+        !connectionsRef.current.contains(event.target as Node)
+      ) {
+        setShowConnections(false);
       }
     };
 
@@ -136,8 +177,173 @@ export function SiteNavbar() {
             </button>
 
             {user && (
-              <div ref={messagesRef} className="relative">
-                <button
+              <>
+                <div ref={connectionsRef} className="relative">
+                  <button
+                    onClick={handleToggleConnections}
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card transition-colors hover:bg-secondary relative"
+                    aria-label="Connections"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    {connectionNotificationCount > 0 && (
+                      <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-white shadow-sm">
+                        {connectionNotificationCount}
+                      </span>
+                    )}
+                  </button>
+
+                  {showConnections && (
+                    <div className="fixed left-4 right-4 top-20 z-50 max-h-[calc(100vh-6rem)] overflow-hidden rounded-3xl border border-border bg-card shadow-elevated sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-5 sm:w-80">
+                      <div className="border-b border-border p-4 flex items-center justify-between">
+                        <h3 className="font-display font-semibold">Connections</h3>
+                        {connectionNotificationCount > 0 && (
+                          <Badge
+                            variant="secondary"
+                            className="rounded-full text-[10px]"
+                          >
+                            {connectionNotificationCount} New
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="max-h-[calc(100vh-14rem)] overflow-y-auto sm:max-h-96">
+                        {profile?.role === "brand" ? (
+                          !brandConnections || brandConnections.length === 0 ? (
+                            <div className="p-8 text-center text-xs text-muted-foreground">
+                              No connection requests
+                            </div>
+                          ) : (
+                            brandConnections.map((req) => (
+                              <div
+                                key={req._id}
+                                className="border-b border-border/50 p-4 transition-colors hover:bg-secondary/40 last:border-0"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <img
+                                    src={
+                                      req.creatorProfile?.avatarUrl ||
+                                      `https://api.dicebear.com/7.x/initials/svg?seed=${req.creatorProfile?.fullName}`
+                                    }
+                                    className="h-10 w-10 rounded-xl object-cover border border-border/40 shadow-sm"
+                                  />
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center justify-between">
+                                      <span className="truncate font-display text-sm font-semibold">
+                                        {req.creatorProfile?.fullName}
+                                      </span>
+                                      <span className="text-[9px] text-muted-foreground">
+                                        {new Date(req.createdAt).toLocaleDateString(undefined, {
+                                          month: "short",
+                                          day: "numeric",
+                                        })}
+                                      </span>
+                                    </div>
+                                    <p className="truncate text-xs text-muted-foreground">
+                                      {req.creatorProfile?.category || "Creator"}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="mt-2 rounded-xl bg-secondary/50 p-2 text-xs text-muted-foreground line-clamp-2 italic">
+                                  "{req.pitch}"
+                                </div>
+                                <div className="mt-3 flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    className="flex-1 rounded-full text-xs h-7 py-0 bg-emerald-600 hover:bg-emerald-700 text-white border-0"
+                                    onClick={async () => {
+                                      try {
+                                        await acceptConnection({ connectionId: req._id });
+                                        toast.success("Connection accepted!");
+                                      } catch (err) {
+                                        toast.error("Failed to accept connection");
+                                      }
+                                    }}
+                                  >
+                                    Accept
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="flex-1 rounded-full text-xs h-7 py-0"
+                                    onClick={async () => {
+                                      try {
+                                        await rejectConnection({ connectionId: req._id });
+                                        toast.success("Connection rejected");
+                                      } catch (err) {
+                                        toast.error("Failed to reject connection");
+                                      }
+                                    }}
+                                  >
+                                    Decline
+                                  </Button>
+                                </div>
+                              </div>
+                            ))
+                          )
+                        ) : (
+                          !creatorConnections || creatorConnections.length === 0 ? (
+                            <div className="p-8 text-center text-xs text-muted-foreground">
+                              No connection requests sent yet
+                            </div>
+                          ) : (
+                            creatorConnections.map((req) => (
+                              <div
+                                key={req._id}
+                                className="flex items-center gap-3 border-b border-border/50 p-4 transition-colors hover:bg-secondary/40 last:border-0"
+                              >
+                                <img
+                                  src={
+                                    req.brandProfile?.avatarUrl ||
+                                    `https://api.dicebear.com/7.x/initials/svg?seed=${req.brandProfile?.fullName}`
+                                  }
+                                  className="h-10 w-10 rounded-xl object-cover border border-border/40 shadow-sm"
+                                />
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center justify-between">
+                                    <span className="truncate font-display text-sm font-semibold">
+                                      {req.brandProfile?.fullName}
+                                    </span>
+                                    <span className="text-[9px] text-muted-foreground">
+                                      {new Date(req.createdAt).toLocaleDateString(undefined, {
+                                        month: "short",
+                                        day: "numeric",
+                                      })}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-2 mt-0.5">
+                                    <span className="text-xs text-muted-foreground truncate">
+                                      {req.brandProfile?.category || "Brand"}
+                                    </span>
+                                    <Badge
+                                      className={`text-[9px] px-1.5 py-0 rounded-full border-0 font-medium ${
+                                        req.status === "accepted"
+                                          ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400"
+                                          : req.status === "rejected"
+                                          ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+                                          : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"
+                                      }`}
+                                    >
+                                      {req.status.charAt(0).toUpperCase() + req.status.slice(1)}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </div>
+                            ))
+                          )
+                        )}
+                      </div>
+                      <Link
+                        to="/connections"
+                        onClick={() => setShowConnections(false)}
+                        className="block border-t border-border p-3 text-center text-xs font-medium text-primary hover:bg-secondary transition-colors"
+                      >
+                        See all connections
+                      </Link>
+                    </div>
+                  )}
+                </div>
+
+                <div ref={messagesRef} className="relative">
+                  <button
                   onClick={() => setShowNotifs(!showNotifs)}
                   className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card transition-colors hover:bg-secondary relative"
                 >
@@ -211,6 +417,7 @@ export function SiteNavbar() {
                   </div>
                 )}
               </div>
+              </>
             )}
 
             {loading ? (

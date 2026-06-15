@@ -35,7 +35,19 @@ export default defineSchema({
     prefBudget: v.optional(v.string()),
     prefReach: v.optional(v.string()),
     prefRegions: v.optional(v.string()),
+    website: v.optional(v.string()),
+    companySize: v.optional(v.string()),
   }).index("by_userId", ["userId"]),
+
+  campaigns: defineTable({
+    brandId: v.id("profiles"),
+    title: v.string(),
+    budget: v.string(),
+    category: v.string(),
+    duration: v.string(),
+    active: v.boolean(),
+    createdAt: v.number(),
+  }).index("by_brand", ["brandId"]),
 
   pricingTiers: defineTable({
     profileId: v.id("profiles"),
@@ -104,4 +116,21 @@ export default defineSchema({
     .index("by_creator_visible", ["creatorId", "visible"])
     .index("by_brand", ["brandId"])
     .index("by_conversation", ["conversationId"]),
+
+  connections: defineTable({
+    creatorId: v.id("profiles"),
+    brandId: v.id("profiles"),
+    pitch: v.string(),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("accepted"),
+      v.literal("rejected"),
+    ),
+    creatorNotificationSeen: v.optional(v.boolean()),
+    createdAt: v.number(),
+  })
+    .index("by_creator", ["creatorId"])
+    .index("by_brand", ["brandId"])
+    .index("by_creator_brand", ["creatorId", "brandId"]),
 });
+

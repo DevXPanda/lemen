@@ -9,6 +9,8 @@
  */
 
 import type * as admin from "../admin.js";
+import type * as campaigns from "../campaigns.js";
+import type * as connections from "../connections.js";
 import type * as messages from "../messages.js";
 import type * as otp from "../otp.js";
 import type * as otpAction from "../otpAction.js";
@@ -26,6 +28,8 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   admin: typeof admin;
+  campaigns: typeof campaigns;
+  connections: typeof connections;
   messages: typeof messages;
   otp: typeof otp;
   otpAction: typeof otpAction;

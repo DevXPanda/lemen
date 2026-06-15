@@ -224,6 +224,8 @@ export const update = mutation({
     prefBudget: v.optional(v.string()),
     prefReach: v.optional(v.string()),
     prefRegions: v.optional(v.string()),
+    website: v.optional(v.string()),
+    companySize: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const { id, ...fields } = args;

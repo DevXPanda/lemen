@@ -12,6 +12,7 @@ export type Influencer = {
   avatar: string;
   cover: string;
   bio: string;
+  role?: "creator" | "brand";
   // Stats
   profileViews?: number;
   clicks?: number;
@@ -37,6 +38,16 @@ export type Influencer = {
     price: number;
     sortOrder: number;
   }[];
+  // Brand specific fields
+  website?: string;
+  companySize?: string;
+  prefNiches?: string;
+  prefBudget?: string;
+  prefReach?: string;
+  prefRegions?: string;
+  campaigns?: any[];
+  campaignsCount?: number;
+  hiredCount?: number;
 };
 
 const avatars = [
@@ -65,25 +76,77 @@ const covers = [
 
 // Prices in INR (Indian Rupees)
 const data: Omit<Influencer, "avatar" | "cover">[] = [
-  // { id: "1", name: "Aanya Sharma", handle: "@aanyastyle", category: "Fashion", followers: 500, startingPrice: 25000, location: "Mumbai, IN", rating: 4.9, reviews: 124, available: true, bio: "Minimalist fashion editor blending Indian heritage with global streetwear." },
-  // { id: "2", name: "Arjun Kapoor", handle: "@arjunfit", category: "Fitness", followers: 1240000, startingPrice: 70000, location: "Bengaluru, IN", rating: 4.8, reviews: 312, available: true, bio: "Coach and movement specialist. Mobility, hybrid training, real talk." },
-  // { id: "3", name: "Vikram Iyer", handle: "@vikrambyte", category: "Tech", followers: 685000, startingPrice: 45000, location: "Hyderabad, IN", rating: 5.0, reviews: 87, available: false, bio: "Reviewing the future, one gadget at a time." },
-  // { id: "4", name: "Priya Menon", handle: "@priyaglow", category: "Beauty", followers: 920000, startingPrice: 60000, location: "Chennai, IN", rating: 4.9, reviews: 203, available: true, bio: "Skin-first beauty creator. Honest reviews and bold tutorials." },
-  // { id: "5", name: "Rohan Desai", handle: "@rohanplays", category: "Gaming", followers: 2100000, startingPrice: 100000, location: "Pune, IN", rating: 4.7, reviews: 451, available: true, bio: "Streamer, esports caster, indie game champion." },
-  // { id: "6", name: "Sneha Rao", handle: "@snehawanders", category: "Travel", followers: 358000, startingPrice: 22000, location: "Goa, IN", rating: 4.9, reviews: 98, available: true, bio: "Slow travel storytelling across hidden corners of India." },
-  // { id: "7", name: "Karan Mehta", handle: "@karancooks", category: "Food", followers: 712000, startingPrice: 38000, location: "Delhi, IN", rating: 4.8, reviews: 176, available: true, bio: "Modern home cooking. 30-minute Indian recipes with serious flavor." },
-  // { id: "8", name: "Ishita Anand", handle: "@ishitalifts", category: "Fitness", followers: 540000, startingPrice: 34000, location: "Bengaluru, IN", rating: 4.9, reviews: 142, available: false, bio: "Strength coach helping women break their personal records." },
-  // { id: "9", name: "Devansh Patel", handle: "@devanshlens", category: "Photography", followers: 290000, startingPrice: 28000, location: "Ahmedabad, IN", rating: 5.0, reviews: 64, available: true, bio: "Street and editorial photographer. Light is everything." },
-  // { id: "10", name: "Meera Krishnan", handle: "@meerabeauty", category: "Beauty", followers: 1080000, startingPrice: 65000, location: "Kochi, IN", rating: 4.9, reviews: 268, available: true, bio: "Ayurveda-inspired rituals, science-backed routines." },
-  // { id: "11", name: "Aditya Verma", handle: "@adityacodes", category: "Tech", followers: 410000, startingPrice: 32000, location: "Noida, IN", rating: 4.8, reviews: 91, available: true, bio: "Developer advocate. AI tools, productivity, dev culture." },
-  // { id: "12", name: "Tanya Bhatia", handle: "@tanyatravels", category: "Travel", followers: 625000, startingPrice: 42000, location: "Jaipur, IN", rating: 4.9, reviews: 188, available: true, bio: "Heritage trails and warm stories. Sustainable travel advocate." },
+  { id: "1", name: "Aanya Sharma", handle: "@aanyastyle", category: "Fashion", followers: 500, startingPrice: 25000, location: "Mumbai, IN", rating: 4.9, reviews: 124, available: true, bio: "Minimalist fashion editor blending Indian heritage with global streetwear." },
+  { id: "2", name: "Arjun Kapoor", handle: "@arjunfit", category: "Fitness", followers: 1240000, startingPrice: 70000, location: "Bengaluru, IN", rating: 4.8, reviews: 312, available: true, bio: "Coach and movement specialist. Mobility, hybrid training, real talk." },
+  { id: "3", name: "Vikram Iyer", handle: "@vikrambyte", category: "Tech", followers: 685000, startingPrice: 45000, location: "Hyderabad, IN", rating: 5.0, reviews: 87, available: false, bio: "Reviewing the future, one gadget at a time." },
+  { id: "4", name: "Priya Menon", handle: "@priyaglow", category: "Beauty", followers: 920000, startingPrice: 60000, location: "Chennai, IN", rating: 4.9, reviews: 203, available: true, bio: "Skin-first beauty creator. Honest reviews and bold tutorials." },
+  { id: "5", name: "Rohan Desai", handle: "@rohanplays", category: "Gaming", followers: 2100000, startingPrice: 100000, location: "Pune, IN", rating: 4.7, reviews: 451, available: true, bio: "Streamer, esports caster, indie game champion." },
+  { id: "6", name: "Sneha Rao", handle: "@snehawanders", category: "Travel", followers: 358000, startingPrice: 22000, location: "Goa, IN", rating: 4.9, reviews: 98, available: true, bio: "Slow travel storytelling across hidden corners of India." },
+  { id: "7", name: "Karan Mehta", handle: "@karancooks", category: "Food", followers: 712000, startingPrice: 38000, location: "Delhi, IN", rating: 4.8, reviews: 176, available: true, bio: "Modern home cooking. 30-minute Indian recipes with serious flavor." },
+  { id: "8", name: "Ishita Anand", handle: "@ishitalifts", category: "Fitness", followers: 540000, startingPrice: 34000, location: "Bengaluru, IN", rating: 4.9, reviews: 142, available: false, bio: "Strength coach helping women break their personal records." },
+  { id: "9", name: "Devansh Patel", handle: "@devanshlens", category: "Photography", followers: 290000, startingPrice: 28000, location: "Ahmedabad, IN", rating: 5.0, reviews: 64, available: true, bio: "Street and editorial photographer. Light is everything." },
+  { id: "10", name: "Meera Krishnan", handle: "@meerabeauty", category: "Beauty", followers: 1080000, startingPrice: 65000, location: "Kochi, IN", rating: 4.9, reviews: 268, available: true, bio: "Ayurveda-inspired rituals, science-backed routines." },
+  { id: "11", name: "Aditya Verma", handle: "@adityacodes", category: "Tech", followers: 410000, startingPrice: 32000, location: "Noida, IN", rating: 4.8, reviews: 91, available: true, bio: "Developer advocate. AI tools, productivity, dev culture." },
+  { id: "12", name: "Tanya Bhatia", handle: "@tanyatravels", category: "Travel", followers: 625000, startingPrice: 42000, location: "Jaipur, IN", rating: 4.9, reviews: 188, available: true, bio: "Heritage trails and warm stories. Sustainable travel advocate." },
 ];
 
 export const influencers: Influencer[] = data.map((d, i) => ({
   ...d,
   avatar: avatars[i % avatars.length],
   cover: covers[i % covers.length],
+  role: "creator",
 }));
+
+export const mockBrands: Influencer[] = [
+  {
+    id: "brand_mock_1",
+    name: "Nike India",
+    handle: "@nikeindia",
+    category: "Sports, Lifestyle",
+    followers: 2500000,
+    startingPrice: 0,
+    location: "Mumbai, India",
+    rating: 5.0,
+    reviews: 0,
+    available: true,
+    avatar: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80",
+    cover: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=900&q=80",
+    bio: "Just Do It.",
+    role: "brand",
+  },
+  {
+    id: "brand_mock_2",
+    name: "Zomato",
+    handle: "@zomato",
+    category: "Food, Delivery",
+    followers: 1800000,
+    startingPrice: 0,
+    location: "Delhi, India",
+    rating: 4.8,
+    reviews: 0,
+    available: true,
+    avatar: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400&q=80",
+    cover: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=900&q=80",
+    bio: "Better food for more people.",
+    role: "brand",
+  },
+  {
+    id: "brand_mock_3",
+    name: "Tata Motors",
+    handle: "@tatamotors",
+    category: "Automobile",
+    followers: 900000,
+    startingPrice: 0,
+    location: "Pune, India",
+    rating: 4.9,
+    reviews: 0,
+    available: true,
+    avatar: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=400&q=80",
+    cover: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=900&q=80",
+    bio: "Connecting Aspirations.",
+    role: "brand",
+  },
+];
 
 export const categories = [
   { name: "Fashion", emoji: "👗", count: 1240 },

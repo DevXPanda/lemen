@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
+  ArrowLeft,
   Search,
   Sparkles,
   Star,
@@ -17,6 +18,7 @@ import {
   categories,
   formatFollowers,
   influencers,
+  mockBrands,
   type Influencer,
 } from "@/data/influencers";
 import { formatINR } from "@/lib/format";
@@ -25,6 +27,88 @@ import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import heroBanner from "@/assets/hero-banner.jpg";
 import pravixoFlow from "@/assets/pravixo-flow.jpeg";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  type CarouselApi,
+} from "@/components/ui/carousel";
+import { cn } from "@/lib/utils";
+
+function FeaturedProfileCard({
+  inf,
+  user,
+  handleCardClick,
+}: {
+  inf: Influencer;
+  user: any;
+  handleCardClick: (id: string) => void;
+}) {
+  return (
+    <Link
+      key={inf.id}
+      to={`/influencer/${inf.id}`}
+      onClick={(e) => {
+        if (!user) {
+          e.preventDefault();
+          handleCardClick(inf.id);
+        }
+      }}
+      className="group flex flex-col h-full overflow-hidden rounded-3xl border border-border bg-card transition-all hover:shadow-elevated"
+    >
+      <div className="relative h-24 sm:h-40 overflow-hidden">
+        <img
+          src={inf.cover}
+          alt=""
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+        />
+        <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/60 to-transparent" />
+        <Badge className="absolute right-2 top-2 rounded-full border-0 bg-white/90 text-[10px] sm:text-xs text-foreground backdrop-blur px-2 py-0.5 sm:px-3 sm:py-1">
+          {inf.category}
+        </Badge>
+      </div>
+      <div className="-mt-7 sm:-mt-10 px-3 pb-3 sm:px-5 sm:pb-5 flex-1 flex flex-col">
+        <img
+          src={inf.avatar}
+          alt={inf.name}
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          className="relative z-10 h-14 w-14 sm:h-20 sm:w-20 rounded-full border-4 border-card object-cover shadow-elevated bg-muted"
+        />
+        <div className="mt-2.5 sm:mt-3 flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <h3 className="font-display font-semibold text-xs sm:text-base truncate">{inf.name}</h3>
+            <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+              {inf.handle}
+            </p>
+          </div>
+          <span className="flex shrink-0 items-center gap-0.5 text-xs sm:text-sm font-medium text-amber">
+            <Star className="h-3 w-3 sm:h-4 sm:w-4 fill-current" />
+            {inf.rating}
+          </span>
+        </div>
+        <div className="mt-auto pt-3">
+          <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row sm:items-center justify-between border-t border-border pt-3 text-[10px] sm:text-sm gap-1">
+            <span className="flex items-center gap-0.5 text-muted-foreground truncate">
+              <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5" />{" "}
+              {inf.location.split(",")[0]}
+            </span>
+            <span>
+              <strong>{formatFollowers(inf.followers)}</strong>{" "}
+              <span className="text-muted-foreground">followers</span>
+            </span>
+          </div>
+          <div className="mt-1.5 sm:mt-2 flex items-center justify-between text-[10px] sm:text-sm">
+            <span className="text-muted-foreground">From</span>
+            <span className="font-display text-xs sm:text-lg font-bold text-gradient-sunset">
+              {formatINR(inf.startingPrice)}
+            </span>
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+}
 
 // export function Landing() {
 //   const navigate = useNavigate();
@@ -70,7 +154,9 @@ export function Landing() {
   }, []);
 
   const liveCreators = useQuery(api.profiles.list, { role: "creator" });
-  const featured = useMemo(() => {
+  const liveBrands = useQuery(api.profiles.list, { role: "brand" });
+
+  const featuredCreators = useMemo(() => {
     const creators = liveCreators || [];
     const live = creators.map(
       (p) =>
@@ -98,6 +184,7 @@ export function Landing() {
             p.coverUrl ||
             `https://api.dicebear.com/7.x/shapes/svg?seed=${p.fullName}`,
           bio: p.bio || "",
+          role: p.role,
         }) as Influencer,
     );
 
@@ -109,8 +196,87 @@ export function Landing() {
       return 0;
     });
 
-    return [...orderedLive, ...influencers].slice(0, 6);
+    return [...orderedLive, ...influencers].slice(0, 3);
   }, [liveCreators, profile]);
+
+  const featuredBrands = useMemo(() => {
+    const brands = liveBrands || [];
+    const live = brands.map(
+      (p) =>
+        ({
+          id: p._id,
+          name: p.fullName,
+          handle: p.handle || `@${p.fullName.toLowerCase().replace(/\s/g, "")}`,
+          category: p.category || "General",
+          followers: 0,
+          startingPrice: p.startingPrice || 0,
+          location: p.location || "India",
+          rating: (p as any).rating ?? 5.0,
+          reviews: (p as any).reviewsCount ?? 0,
+          available: true,
+          avatar:
+            p.avatarUrl ||
+            `https://api.dicebear.com/7.x/initials/svg?seed=${p.fullName}`,
+          cover:
+            p.coverUrl ||
+            `https://api.dicebear.com/7.x/shapes/svg?seed=${p.fullName}`,
+          bio: p.bio || "",
+          role: p.role,
+        }) as Influencer,
+    );
+
+    return [...live, ...mockBrands].slice(0, 3);
+  }, [liveBrands]);
+
+  const [creatorsApi, setCreatorsApi] = useState<CarouselApi>();
+  const [brandsApi, setBrandsApi] = useState<CarouselApi>();
+
+  const [creatorsHovered, setCreatorsHovered] = useState(false);
+  const [brandsHovered, setBrandsHovered] = useState(false);
+
+  const [creatorsIndex, setCreatorsIndex] = useState(0);
+  const [brandsIndex, setBrandsIndex] = useState(0);
+
+  const [creatorsSnaps, setCreatorsSnaps] = useState<number[]>([]);
+  const [brandsSnaps, setBrandsSnaps] = useState<number[]>([]);
+
+  // Autoplay for creators
+  useEffect(() => {
+    if (!creatorsApi || creatorsHovered) return;
+    const interval = setInterval(() => {
+      creatorsApi.scrollNext();
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [creatorsApi, creatorsHovered]);
+
+  // Autoplay for brands
+  useEffect(() => {
+    if (!brandsApi || brandsHovered) return;
+    const interval = setInterval(() => {
+      brandsApi.scrollNext();
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [brandsApi, brandsHovered]);
+
+  // Sync snaps and index for creators
+  useEffect(() => {
+    if (!creatorsApi) return;
+    setCreatorsSnaps(creatorsApi.scrollSnapList());
+    setCreatorsIndex(creatorsApi.selectedScrollSnap());
+    creatorsApi.on("select", () => {
+      setCreatorsIndex(creatorsApi.selectedScrollSnap());
+    });
+  }, [creatorsApi]);
+
+  // Sync snaps and index for brands
+  useEffect(() => {
+    if (!brandsApi) return;
+    setBrandsSnaps(brandsApi.scrollSnapList());
+    setBrandsIndex(brandsApi.selectedScrollSnap());
+    brandsApi.on("select", () => {
+      setBrandsIndex(brandsApi.selectedScrollSnap());
+    });
+  }, [brandsApi]);
 
   const handleSearch = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -348,8 +514,8 @@ export function Landing() {
         </div>
       </section>
 
-      {/* FEATURED */}
-      <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
+      {/* FEATURED CREATORS */}
+      <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
         <div className="mb-10 flex items-end justify-between">
           <div>
             <h2 className="font-display text-3xl font-bold sm:text-4xl">
@@ -359,77 +525,161 @@ export function Landing() {
               Hand-picked by our team this week.
             </p>
           </div>
-          <Link
-            to="/browse"
-            className="hidden text-sm font-medium text-primary hover:underline sm:block"
-          >
-            View all →
-          </Link>
-        </div>
-        <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3">
-          {featured.map((inf) => (
+          <div className="flex items-center gap-4">
             <Link
-              key={inf.id}
-              to={`/influencer/${inf.id}`}
-              onClick={(e) => {
-                if (!user) {
-                  e.preventDefault();
-                  handleCreatorCardClick(inf.id);
-                }
-              }}
-              className="group overflow-hidden rounded-3xl border border-border bg-card transition-all hover:shadow-elevated"
+              to="/browse"
+              className="hidden text-sm font-medium text-primary hover:underline sm:block"
             >
-              <div className="relative h-24 sm:h-40 overflow-hidden">
-                <img
-                  src={inf.cover}
-                  alt=""
-                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                />
-                <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/60 to-transparent" />
-                <Badge className="absolute right-2 top-2 rounded-full border-0 bg-white/90 text-[10px] sm:text-xs text-foreground backdrop-blur px-2 py-0.5 sm:px-3 sm:py-1">
-                  {inf.category}
-                </Badge>
-              </div>
-              <div className="-mt-7 sm:-mt-10 px-3 pb-3 sm:px-5 sm:pb-5">
-                <img
-                  src={inf.avatar}
-                  alt={inf.name}
-                  loading="lazy"
-                  referrerPolicy="no-referrer"
-                  className="relative z-10 h-14 w-14 sm:h-20 sm:w-20 rounded-full border-4 border-card object-cover shadow-elevated bg-muted"
-                />
-                <div className="mt-2.5 sm:mt-3 flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <h3 className="font-display font-semibold text-xs sm:text-base truncate">{inf.name}</h3>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
-                      {inf.handle}
-                    </p>
-                  </div>
-                  <span className="flex shrink-0 items-center gap-0.5 text-xs sm:text-sm font-medium text-amber">
-                    <Star className="h-3 w-3 sm:h-4 sm:w-4 fill-current" />
-                    {inf.rating}
-                  </span>
-                </div>
-                <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row sm:items-center justify-between border-t border-border pt-3 text-[10px] sm:text-sm gap-1">
-                  <span className="flex items-center gap-0.5 text-muted-foreground truncate">
-                    <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5" />{" "}
-                    {inf.location.split(",")[0]}
-                  </span>
-                  <span>
-                    <strong>{formatFollowers(inf.followers)}</strong>{" "}
-                    <span className="text-muted-foreground">followers</span>
-                  </span>
-                </div>
-                <div className="mt-1.5 sm:mt-2 flex items-center justify-between text-[10px] sm:text-sm">
-                  <span className="text-muted-foreground">From</span>
-                  <span className="font-display text-xs sm:text-lg font-bold text-gradient-sunset">
-                    {formatINR(inf.startingPrice)}
-                  </span>
-                </div>
-              </div>
+              View all →
             </Link>
-          ))}
+            <div className="flex items-center gap-1.5">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8 rounded-full border-border bg-card hover:bg-accent"
+                onClick={() => creatorsApi?.scrollPrev()}
+                disabled={!creatorsApi?.canScrollPrev()}
+                aria-label="Previous slide"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8 rounded-full border-border bg-card hover:bg-accent"
+                onClick={() => creatorsApi?.scrollNext()}
+                disabled={!creatorsApi?.canScrollNext()}
+                aria-label="Next slide"
+              >
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </div>
+
+        <div
+          onMouseEnter={() => setCreatorsHovered(true)}
+          onMouseLeave={() => setCreatorsHovered(false)}
+        >
+          <Carousel
+            setApi={setCreatorsApi}
+            opts={{ loop: true, align: "start" }}
+            className="w-full"
+          >
+            <CarouselContent className="items-stretch -ml-3 sm:-ml-6">
+              {featuredCreators.map((inf) => (
+                <CarouselItem
+                  key={inf.id}
+                  className="pl-3 sm:pl-6 basis-full md:basis-1/2 lg:basis-1/3"
+                >
+                  <FeaturedProfileCard
+                    inf={inf}
+                    user={user}
+                    handleCardClick={handleCreatorCardClick}
+                  />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
+        </div>
+
+        {creatorsSnaps.length > 1 && (
+          <div className="mt-6 flex justify-center gap-1.5">
+            {creatorsSnaps.map((_, index) => (
+              <button
+                key={index}
+                className={cn(
+                  "h-1.5 rounded-full transition-all duration-300",
+                  index === creatorsIndex
+                    ? "bg-primary w-5"
+                    : "bg-muted-foreground/30 hover:bg-muted-foreground/50 w-1.5"
+                )}
+                onClick={() => creatorsApi?.scrollTo(index)}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* FEATURED BRANDS */}
+      <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
+        <div className="mb-10 flex items-end justify-between">
+          <div>
+            <h2 className="font-display text-3xl font-bold sm:text-4xl">
+              Featured brands
+            </h2>
+            <p className="mt-2 text-muted-foreground">
+              Vetted brands hiring creators today.
+            </p>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 rounded-full border-border bg-card hover:bg-accent"
+              onClick={() => brandsApi?.scrollPrev()}
+              disabled={!brandsApi?.canScrollPrev()}
+              aria-label="Previous slide"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 rounded-full border-border bg-card hover:bg-accent"
+              onClick={() => brandsApi?.scrollNext()}
+              disabled={!brandsApi?.canScrollNext()}
+              aria-label="Next slide"
+            >
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        <div
+          onMouseEnter={() => setBrandsHovered(true)}
+          onMouseLeave={() => setBrandsHovered(false)}
+        >
+          <Carousel
+            setApi={setBrandsApi}
+            opts={{ loop: true, align: "start" }}
+            className="w-full"
+          >
+            <CarouselContent className="items-stretch -ml-3 sm:-ml-6">
+              {featuredBrands.map((inf) => (
+                <CarouselItem
+                  key={inf.id}
+                  className="pl-3 sm:pl-6 basis-full md:basis-1/2 lg:basis-1/3"
+                >
+                  <FeaturedProfileCard
+                    inf={inf}
+                    user={user}
+                    handleCardClick={handleCreatorCardClick}
+                  />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
+        </div>
+
+        {brandsSnaps.length > 1 && (
+          <div className="mt-6 flex justify-center gap-1.5">
+            {brandsSnaps.map((_, index) => (
+              <button
+                key={index}
+                className={cn(
+                  "h-1.5 rounded-full transition-all duration-300",
+                  index === brandsIndex
+                    ? "bg-primary w-5"
+                    : "bg-muted-foreground/30 hover:bg-muted-foreground/50 w-1.5"
+                )}
+                onClick={() => brandsApi?.scrollTo(index)}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            ))}
+          </div>
+        )}
       </section>
       {/* PRAVIXO FLOW */}
 <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">

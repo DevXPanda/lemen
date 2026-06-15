@@ -458,20 +458,22 @@ export function CreatorDash() {
 
   return (
     <div>
-      <section className="relative h-64 overflow-hidden bg-muted sm:h-80">
-        {profile?.coverUrl ? (
-          <img
-            src={profile.coverUrl}
-            alt=""
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">
-            Banner preview
-          </div>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-background 30 via-background/1 to-transparent" />
-      </section>
+      {/* COVER BANNER PREVIEW */}
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <section className="relative h-64 overflow-hidden bg-muted sm:h-80 rounded-b-2xl sm:rounded-b-3xl rounded-t-none shadow-sm border border-border/50">
+          {profile?.coverUrl ? (
+            <img
+              src={profile.coverUrl}
+              alt=""
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">
+              Banner preview
+            </div>
+          )}
+        </section>
+      </div>
 
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-2">
