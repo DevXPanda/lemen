@@ -27,7 +27,7 @@ export function ConnectionsPage() {
   >("all");
 
   useEffect(() => {
-    document.title = "Connections — Lumen";
+    document.title = "Connections —  Pravixo";
   }, []);
 
   useEffect(() => {

@@ -18,7 +18,7 @@ import { formatNumber } from "@/lib/format";
 
 export function Dashboard() {
   useEffect(() => {
-    document.title = "Dashboard — Lumen Admin";
+    document.title = "Dashboard — Pravixo Admin";
   }, []);
 
   const stats = useQuery(api.admin.stats);

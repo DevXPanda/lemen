@@ -37,7 +37,7 @@ import { formatNumber } from "@/lib/format";
 
 export function UsersPage() {
   useEffect(() => {
-    document.title = "Users — Lumen Admin";
+    document.title = "Users —  Pravixo Admin";
   }, []);
 
   const [search, setSearch] = useState("");

@@ -19,7 +19,7 @@ export function ResetPassword() {
   );
 
   useEffect(() => {
-    document.title = "Reset password — Lumen";
+    document.title = "Reset password —  Pravixo";
   }, []);
 
   const [password, setPassword] = useState("");

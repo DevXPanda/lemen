@@ -217,7 +217,7 @@ export function CreatorDash() {
   };
 
   useEffect(() => {
-    document.title = "Creator dashboard — Lumen";
+    document.title = "Creator dashboard —  Pravixo";
   }, []);
 
   useEffect(() => {

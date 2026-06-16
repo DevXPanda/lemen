@@ -33,7 +33,7 @@ export function Browse() {
   };
 
   useEffect(() => {
-    document.title = `Browse ${role === "brand" ? "brands" : "creators"} — Lumen`;
+    document.title = `Browse ${role === "brand" ? "brands" : "creators"} — Pravixo `;
   }, [role]);
   const [activeCats, setActiveCats] = useState<string[]>([]);
   const [price, setPrice] = useState<number[]>([150000]);

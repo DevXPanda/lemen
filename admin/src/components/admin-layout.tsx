@@ -55,7 +55,7 @@ function SidebarContent() {
         </div>
         <div>
           <span className="font-display text-lg font-bold tracking-tight">
-            Lumen
+            Pravixo 
           </span>
           <div className="flex items-center gap-1.5">
             <Shield className="h-3 w-3 text-primary" />
@@ -172,7 +172,7 @@ function AdminShell() {
             <div className="flex h-7 w-7 items-center justify-center rounded-lg gradient-sunset">
               <Sparkles className="h-3.5 w-3.5 text-white" />
             </div>
-            <span className="font-display text-sm font-bold">Lumen Admin</span>
+            <span className="font-display text-sm font-bold">Pravixo Admin</span>
           </div>
         </header>
 

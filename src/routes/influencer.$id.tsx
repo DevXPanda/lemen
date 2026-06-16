@@ -114,7 +114,7 @@ export const loader = async ({
             `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.fullName}`,
           cover:
             profile.coverUrl || `${fallbackCover}?seed=${profile.fullName}`,
-          bio: profile.bio || (profile.role === "brand" ? "Brand details on Lumen" : "Creator on Lumen"),
+          bio: profile.bio || (profile.role === "brand" ? "Brand details on  Pravixo" : "Creator on  Pravixo"),
           portfolioImages,
           // Socials
           instagramHandle: profile.instagramHandle,
@@ -396,7 +396,7 @@ export function Profile() {
 
     return {
       companySize: inf.companySize || "50 - 200 employees",
-      website: inf.website || "https://lumen.co",
+      website: inf.website || "https:// Pravixo.co",
       campaignsCount: inf.campaignsCount ?? 0,
       hiredCount: inf.hiredCount ?? 0,
       activeCampaignsCount: activeCamps.length,
@@ -599,7 +599,7 @@ export function Profile() {
 
   useEffect(() => {
     if (inf) {
-      document.title = `${inf.name} — Lumen`;
+      document.title = `${inf.name} —  Pravixo`;
     }
   }, [inf]);
 

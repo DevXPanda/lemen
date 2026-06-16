@@ -63,9 +63,22 @@ function FeaturedProfileCard({
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
         <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/60 to-transparent" />
-        <Badge className="absolute right-2 top-2 rounded-full border-0 bg-white/90 text-[10px] sm:text-xs text-foreground backdrop-blur px-2 py-0.5 sm:px-3 sm:py-1">
-          {inf.category}
-        </Badge>
+        <Badge
+  className="
+    absolute right-2 top-2
+    rounded-full border-0
+    bg-white/90 text-black
+    dark:bg-zinc-800/90 dark:text-white
+    backdrop-blur
+    px-2 py-0.5 sm:px-3 sm:py-1
+    text-[10px] sm:text-xs
+    transition-colors duration-300
+    hover:bg-yellow-400 hover:text-black
+    dark:hover:bg-yellow-400 dark:hover:text-black
+  "
+>
+  {inf.category}
+</Badge>
       </div>
       <div className="-mt-7 sm:-mt-10 px-3 pb-3 sm:px-5 sm:pb-5 flex-1 flex flex-col">
         <img
@@ -149,10 +162,10 @@ export function Landing() {
   );
 
   useEffect(() => {
-    document.title = "Lumen — Hire creators that move the needle";
+    document.title = "Pravixo — Hire creators that move the needle";
   }, []);
   useEffect(() => {
-    document.title = "Lumen — Hire creators that move the needle";
+    document.title = "Pravixo — Hire creators that move the needle";
   }, []);
 
   const liveCreators = useQuery(api.profiles.list, { role: "creator" });

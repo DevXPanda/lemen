@@ -14,7 +14,7 @@ import { Separator } from "@/components/ui/separator";
 
 export function SettingsPage() {
   useEffect(() => {
-    document.title = "Settings — Lumen Admin";
+    document.title = "Settings — Pravixo Admin";
   }, []);
 
   const { theme, toggle, setTheme } = useTheme();
@@ -180,7 +180,7 @@ export function SettingsPage() {
           <div className="mt-6 space-y-4">
             <div className="flex items-center justify-between rounded-2xl border border-border p-4">
               <span className="text-sm">Platform</span>
-              <span className="font-display text-sm font-semibold">Lumen</span>
+              <span className="font-display text-sm font-semibold">Pravixo</span>
             </div>
             <div className="flex items-center justify-between rounded-2xl border border-border p-4">
               <span className="text-sm">Admin version</span>

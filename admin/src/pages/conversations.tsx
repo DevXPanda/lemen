@@ -29,7 +29,7 @@ import { toast } from "sonner";
 
 export function ConversationsPage() {
   useEffect(() => {
-    document.title = "Conversations — Lumen Admin";
+    document.title = "Conversations —  Pravixo Admin";
   }, []);
 
   const [statusFilter, setStatusFilter] = useState<string>("");

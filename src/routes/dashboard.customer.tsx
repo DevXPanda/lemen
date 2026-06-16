@@ -207,7 +207,7 @@ export function CustomerDash() {
   const [savingCampaign, setSavingCampaign] = useState(false);
 
   useEffect(() => {
-    document.title = "Brand dashboard — Lumen";
+    document.title = "Brand dashboard —  Pravixo";
   }, []);
 
   useEffect(() => {
