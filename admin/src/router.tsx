@@ -6,6 +6,8 @@ import { UsersPage } from "./pages/users";
 import { ConversationsPage } from "./pages/conversations";
 import { MessagesPage } from "./pages/messages";
 import { SettingsPage } from "./pages/settings";
+import CreatorRequests from "@/pages/CreatorRequests";
+import BrandRequests from "@/pages/BrandRequests";
 
 export const router = createBrowserRouter([
   {
@@ -35,6 +37,14 @@ export const router = createBrowserRouter([
         path: "/settings",
         element: <SettingsPage />,
       },
+      {
+  path: "/verification-requests/creators",
+  element: <CreatorRequests />,
+},
+{
+  path: "/verification-requests/brands",
+  element: <BrandRequests />,
+},
     ],
   },
   {

@@ -37,6 +37,15 @@ export default defineSchema({
     prefRegions: v.optional(v.string()),
     website: v.optional(v.string()),
     companySize: v.optional(v.string()),
+    // Verification fields
+    verificationStatus: v.optional(v.string()), // "unverified" | "pending" | "verified" | "rejected"
+    aadharUrl: v.optional(v.string()),
+    panUrl: v.optional(v.string()),
+    aadharStorageId: v.optional(v.string()),
+    panStorageId: v.optional(v.string()),
+    gstNumber: v.optional(v.string()),
+gstCertificateUrl: v.optional(v.string()),
+gstCertificateStorageId: v.optional(v.string()),
   }).index("by_userId", ["userId"]),
 
   campaigns: defineTable({
@@ -133,4 +142,3 @@ export default defineSchema({
     .index("by_brand", ["brandId"])
     .index("by_creator_brand", ["creatorId", "brandId"]),
 });
-

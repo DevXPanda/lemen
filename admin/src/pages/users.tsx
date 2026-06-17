@@ -52,11 +52,15 @@ export function UsersPage() {
 
   const deleteProfile = useMutation(api.admin.deleteProfile);
   const updateRole = useMutation(api.admin.updateProfileRole);
+  const updateVerification = useMutation(
+  api.admin.updateVerificationStatus,
+);
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
     try {
-      await deleteProfile({ id: deleteTarget });
+      await deleteProfile({ id: deleteTarget });0
+      
       toast.success(`Deleted ${deleteName}`);
     } catch (err) {
       toast.error((err as Error).message);

@@ -131,6 +131,7 @@ export const loader = async ({
           twitterFollowers: profile.twitterFollowers,
           pricingTiers,
           role: profile.role,
+          verificationStatus: profile.verificationStatus,
           // Brand fields
           website: profile.website,
           companySize: profile.companySize,
@@ -859,9 +860,11 @@ export function Profile() {
                   <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
                     {inf.name}
                   </h1>
-                  <span className="flex h-5 w-5 sm:h-6 sm:w-6 shrink-0 items-center justify-center rounded-full gradient-sunset shadow-md">
-                    <Check className="h-3.5 w-3.5 text-white" />
-                  </span>
+                  {inf.verificationStatus === "verified" && (
+                    <span className="flex h-5 w-5 sm:h-6 sm:w-6 shrink-0 items-center justify-center rounded-full gradient-sunset shadow-md">
+                      <Check className="h-3.5 w-3.5 text-white" />
+                    </span>
+                  )}
                 </div>
                 
                 {/* Username / Handle */}

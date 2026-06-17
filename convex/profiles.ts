@@ -256,6 +256,66 @@ export const setCoverImage = mutation({
     return coverUrl;
   },
 });
+export const submitBrandVerification = mutation({
+  args: {
+    profileId: v.id("profiles"),
+    gstNumber: v.string(),
+    gstCertificateStorageId: v.string(),
+  },
+
+  handler: async (ctx, args) => {
+    const gstCertificateUrl =
+      await ctx.storage.getUrl(
+        args.gstCertificateStorageId as any,
+      );
+
+    await ctx.db.patch(args.profileId, {
+      verificationStatus: "pending",
+      gstNumber: args.gstNumber,
+      gstCertificateStorageId:
+        args.gstCertificateStorageId,
+      gstCertificateUrl:
+        gstCertificateUrl ?? undefined,
+    });
+
+    return {
+      success: true,
+    };
+  },
+});
+export const submitVerification = mutation({
+  args: {
+    profileId: v.id("profiles"),
+    aadharStorageId: v.string(),
+    panStorageId: v.string(),
+  },
+
+ handler: async (ctx, args) => {
+  const aadharUrl = await ctx.storage.getUrl(
+    args.aadharStorageId as any,
+  );
+
+  const panUrl = await ctx.storage.getUrl(
+    args.panStorageId as any,
+  );
+
+  await ctx.db.patch(args.profileId, {
+    verificationStatus: "pending",
+
+    aadharStorageId: args.aadharStorageId,
+    panStorageId: args.panStorageId,
+
+    aadharUrl: aadharUrl ?? undefined,
+    panUrl: panUrl ?? undefined,
+  });
+
+  return {
+    success: true,
+  };
+},
+});
+
+   
 
 export const toggleFavorite = mutation({
   args: {
@@ -354,3 +414,4 @@ export const getFavorites = query({
     return results;
   },
 });
+

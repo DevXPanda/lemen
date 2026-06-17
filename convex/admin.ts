@@ -176,3 +176,18 @@ export const updateProfileRole = mutation({
     await ctx.db.patch(args.id, { role: args.role });
   },
 });
+
+export const updateVerificationStatus = mutation({
+  args: {
+    id: v.id("profiles"),
+    status: v.union(
+      v.literal("unverified"),
+      v.literal("pending"),
+      v.literal("verified"),
+      v.literal("rejected"),
+    ),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.id, { verificationStatus: args.status });
+  },
+});

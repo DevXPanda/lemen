@@ -47,6 +47,12 @@ export type Profile = {
   prefRegions?: string;
   website?: string;
   companySize?: string;
+  // Verification
+verificationStatus?: string;
+aadharUrl?: string;
+panUrl?: string;
+aadharStorageId?: string;
+panStorageId?: string;
 };
 
 type AuthCtx = {

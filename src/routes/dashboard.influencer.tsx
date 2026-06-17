@@ -90,6 +90,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -167,6 +176,14 @@ export function CreatorDash() {
   const [uploading, setUploading] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
+  const [aadharStorageId, setAadharStorageId] = useState("");
+  const [aadharFileName, setAadharFileName] = useState("");
+  const [uploadingAadhar, setUploadingAadhar] = useState(false);
+  const [panStorageId, setPanStorageId] = useState("");
+  const [panFileName, setPanFileName] = useState("");
+  const [uploadingPan, setUploadingPan] = useState(false);
+  const [submittingVerification, setSubmittingVerification] = useState(false);
+  const submitVerification = useMutation(api.profiles.submitVerification);
 
   // Social states
   const [instaHandle, setInstaHandle] = useState("");
@@ -181,6 +198,17 @@ export function CreatorDash() {
   const [quoraFollowers, setQuoraFollowers] = useState<number>(0);
   const [twHandle, setTwHandle] = useState("");
   const [twFollowers, setTwFollowers] = useState<number>(0);
+  const [showVerificationDialog, setShowVerificationDialog] =
+  useState(false);
+
+const [aadharFile, setAadharFile] =
+  useState<File | null>(null);
+
+const [panFile, setPanFile] =
+  useState<File | null>(null);
+
+const [verificationUploading, setVerificationUploading] =
+  useState(false);
 
   const selectedCategories = category
     ? category
@@ -444,6 +472,80 @@ export function CreatorDash() {
     }
   };
 
+  const onAadharUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!profile || !e.target.files?.length) return;
+    const file = e.target.files[0];
+    setUploadingAadhar(true);
+    setAadharFileName(file.name);
+    try {
+      const postUrl = await generateUploadUrl();
+      const result = await fetch(postUrl, {
+        method: "POST",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      if (!result.ok) throw new Error("Upload failed");
+      const { storageId } = await result.json();
+      setAadharStorageId(storageId);
+      toast.success("Aadhar Card uploaded successfully");
+    } catch (err) {
+      const e = err as Error;
+      toast.error(e.message || "Failed to upload Aadhar Card");
+      setAadharFileName("");
+    } finally {
+      setUploadingAadhar(false);
+    }
+  };
+
+  const onPanUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!profile || !e.target.files?.length) return;
+    const file = e.target.files[0];
+    setUploadingPan(true);
+    setPanFileName(file.name);
+    try {
+      const postUrl = await generateUploadUrl();
+      const result = await fetch(postUrl, {
+        method: "POST",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      if (!result.ok) throw new Error("Upload failed");
+      const { storageId } = await result.json();
+      setPanStorageId(storageId);
+      toast.success("PAN Card uploaded successfully");
+    } catch (err) {
+      const e = err as Error;
+      toast.error(e.message || "Failed to upload PAN Card");
+      setPanFileName("");
+    } finally {
+      setUploadingPan(false);
+    }
+  };
+
+  const handleVerificationSubmit = async () => {
+    if (!profile || !aadharStorageId || !panStorageId) return;
+    setSubmittingVerification(true);
+    try {
+     await submitVerification({
+  profileId: profile._id,
+  aadharStorageId,
+  panStorageId,
+});
+      toast.success("Verification documents submitted! Under review.");
+      setShowVerificationDialog(false);
+      // Reset document states
+      setAadharStorageId("");
+      setAadharFileName("");
+      setPanStorageId("");
+      setPanFileName("");
+    } catch (err) {
+      const e = err as Error;
+      toast.error(e.message || "Failed to submit verification request");
+    } finally {
+      setSubmittingVerification(false);
+    }
+  };
+
   const removeImage = async (id: Id<"portfolioImages">) => {
     try {
       await removePortfolioImage({ id });
@@ -477,6 +579,10 @@ export function CreatorDash() {
     profile?.fullName?.split(" ")[0] ||
     user?.email?.split("@")[0] ||
     "there";
+    console.log(
+  "Verification Status:",
+  profile?.verificationStatus,
+);
 
   return (
     <div>
@@ -498,12 +604,147 @@ export function CreatorDash() {
       </div>
 
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-2">
-          <p className="text-sm text-muted-foreground">Creator dashboard</p>
-          <h1 className="font-display text-3xl font-bold sm:text-4xl">
-            Hello, {displayName} 👋
-          </h1>
+        <div className="flex items-start justify-between gap-4">
+  <div className="flex flex-col gap-2">
+    <p className="text-sm text-muted-foreground">
+      Creator dashboard
+    </p>
+
+    <h1 className="font-display text-3xl font-bold sm:text-4xl">
+      Hello, {displayName} 👋
+    </h1>
+  </div>
+
+  {(() => {
+    const status = profile?.verificationStatus;
+    if (status === "verified") {
+      return (
+        <Button className="rounded-full bg-red-600 hover:bg-red-600 text-white px-6 cursor-default flex items-center gap-1.5 font-semibold">
+          <Check className="h-4 w-4" /> Verified
+        </Button>
+      );
+    }
+    if (status === "pending") {
+      return (
+        <Button disabled className="rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 px-6 font-semibold opacity-70">
+          Verification Pending
+        </Button>
+      );
+    }
+    if (status === "rejected") {
+      return (
+        <Button
+          onClick={() => setShowVerificationDialog(true)}
+          className="rounded-full bg-red-600 hover:bg-red-700 text-white px-6 font-semibold shadow-sm"
+        >
+          Verification Failed (Try Again)
+        </Button>
+      );
+    }
+    // Default: unverified
+    return (
+      <Button
+        onClick={() => setShowVerificationDialog(true)}
+        className="rounded-full bg-blue-600 hover:bg-blue-700 text-white px-6 font-semibold"
+      >
+        Get Verified
+      </Button>
+    );
+  })()}
+
+  <Dialog open={showVerificationDialog} onOpenChange={setShowVerificationDialog}>
+    <DialogContent className="sm:max-w-md rounded-3xl">
+      <DialogHeader>
+        <DialogTitle className="font-display text-xl font-bold">Verify Your Profile</DialogTitle>
+        <DialogDescription className="text-sm text-muted-foreground">
+          Upload your Aadhar Card and PAN Card to request creator verification. Files will be stored securely.
+        </DialogDescription>
+      </DialogHeader>
+
+      <div className="grid gap-6 py-4">
+        {/* Aadhar Upload */}
+        <div className="space-y-2">
+          <Label className="text-sm font-semibold">Aadhar Card (PDF, JPG, PNG)</Label>
+          <div className="flex items-center gap-3">
+            <label className="flex-1 inline-flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-muted/20 hover:bg-secondary/40 px-4 py-6 text-sm font-medium transition-colors">
+              <Upload className="h-5 w-5 text-muted-foreground" />
+              <div className="text-left">
+                <p className="text-sm font-medium text-foreground">
+                  {uploadingAadhar ? "Uploading..." : aadharFileName ? aadharFileName : "Upload Aadhar"}
+                </p>
+                <p className="text-xs text-muted-foreground">Max size 5MB</p>
+              </div>
+              <input
+                type="file"
+                accept="image/*,application/pdf"
+                className="hidden"
+                onChange={onAadharUpload}
+                disabled={uploadingAadhar || submittingVerification}
+              />
+            </label>
+            {aadharStorageId && (
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
+                <Check className="h-5 w-5" />
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* PAN Upload */}
+        <div className="space-y-2">
+          <Label className="text-sm font-semibold">PAN Card (PDF, JPG, PNG)</Label>
+          <div className="flex items-center gap-3">
+            <label className="flex-1 inline-flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-muted/20 hover:bg-secondary/40 px-4 py-6 text-sm font-medium transition-colors">
+              <Upload className="h-5 w-5 text-muted-foreground" />
+              <div className="text-left">
+                <p className="text-sm font-medium text-foreground">
+                  {uploadingPan ? "Uploading..." : panFileName ? panFileName : "Upload PAN"}
+                </p>
+                <p className="text-xs text-muted-foreground">Max size 5MB</p>
+              </div>
+              <input
+                type="file"
+                accept="image/*,application/pdf"
+                className="hidden"
+                onChange={onPanUpload}
+                disabled={uploadingPan || submittingVerification}
+              />
+            </label>
+            {panStorageId && (
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
+                <Check className="h-5 w-5" />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <DialogFooter className="flex sm:justify-end gap-2">
+        <Button
+          variant="outline"
+          onClick={() => {
+            setShowVerificationDialog(false);
+            setAadharStorageId("");
+            setAadharFileName("");
+            setPanStorageId("");
+            setPanFileName("");
+          }}
+          disabled={submittingVerification}
+          className="rounded-full"
+        >
+          Cancel
+        </Button>
+        <Button
+          onClick={handleVerificationSubmit}
+          disabled={!aadharStorageId || !panStorageId || submittingVerification}
+          className="rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-glow px-5"
+        >
+          {submittingVerification ? "Submitting..." : "Submit Documents"}
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+</div>
 
         <div className="mt-8 grid gap-4 grid-cols-2 md:grid-cols-3">
           {[
