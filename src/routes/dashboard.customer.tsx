@@ -751,14 +751,42 @@ const handleVerificationSubmit = async () => {
     </Button>
   </Link>
 
-  <Button
-  onClick={() =>
-    setShowVerificationDialog(true)
-  }
-  className="rounded-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-5"
->
-  Get Verified
-</Button>
+  {(() => {
+    const status = profile?.verificationStatus;
+    if (status === "verified") {
+      return (
+        <Button className="rounded-full bg-emerald-600 hover:bg-emerald-600 text-white px-6 cursor-default flex items-center gap-1.5 font-semibold">
+          <Check className="h-4 w-4" /> Verified
+        </Button>
+      );
+    }
+    if (status === "pending") {
+      return (
+        <Button disabled className="rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 px-6 font-semibold opacity-70">
+          Verification Pending
+        </Button>
+      );
+    }
+    if (status === "rejected") {
+      return (
+        <Button
+          onClick={() => setShowVerificationDialog(true)}
+          className="rounded-full bg-red-600 hover:bg-red-700 text-white px-6 font-semibold shadow-sm"
+        >
+          Verification Failed (Try Again)
+        </Button>
+      );
+    }
+    // Default: unverified
+    return (
+      <Button
+        onClick={() => setShowVerificationDialog(true)}
+        className="rounded-full bg-blue-600 hover:bg-blue-700 text-white px-6 font-semibold"
+      >
+        Get Verified
+      </Button>
+    );
+  })()}
 </div>
         </div>
 
@@ -1934,73 +1962,70 @@ const handleVerificationSubmit = async () => {
             </DialogFooter>
           </form>
         </DialogContent>
-        <Dialog
-  open={showVerificationDialog}
-  onOpenChange={setShowVerificationDialog}
->
-  <DialogContent className="sm:max-w-md">
-    <DialogHeader>
-      <DialogTitle>
-        Brand Verification
-      </DialogTitle>
+      </Dialog>
 
-      <DialogDescription>
-        Enter GST Number and upload GST Certificate.
-      </DialogDescription>
-    </DialogHeader>
-
-    <div className="space-y-4">
-      <div>
-        <Label>GST Number</Label>
-
-        <Input
-          value={gstNumber}
-          onChange={(e) =>
-            setGstNumber(e.target.value)
-          }
-          placeholder="Enter GST Number"
-        />
-      </div>
-
-      <div>
-        <Label>GST Certificate</Label>
-
-        <Input
-          type="file"
-          accept="image/*,.pdf"
-          onChange={(e) => {
-            const file =
-              e.target.files?.[0];
-
-            if (file) {
-              uploadVerificationFile(file);
-            }
-          }}
-        />
-
-        {gstFileName && (
-          <p className="text-xs mt-2">
-            Selected: {gstFileName}
-          </p>
-        )}
-      </div>
-
-      <Button
-        className="w-full"
-        onClick={handleVerificationSubmit}
-        disabled={
-          !gstNumber ||
-          !gstCertificateStorageId ||
-          submittingVerification
-        }
+      <Dialog
+        open={showVerificationDialog}
+        onOpenChange={setShowVerificationDialog}
       >
-        {submittingVerification
-          ? "Submitting..."
-          : "Submit Verification"}
-      </Button>
-    </div>
-  </DialogContent>
-</Dialog>
+        <DialogContent className="sm:max-w-md rounded-3xl border border-border bg-card p-6">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl font-bold">
+              Brand Verification
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Enter GST Number and upload GST Certificate.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 mt-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="gstNumber">GST Number</Label>
+              <Input
+                id="gstNumber"
+                value={gstNumber}
+                onChange={(e) => setGstNumber(e.target.value)}
+                placeholder="Enter GST Number"
+                className="rounded-xl border-border bg-background"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="gstCertificate">GST Certificate</Label>
+              <Input
+                id="gstCertificate"
+                type="file"
+                accept="image/*,.pdf"
+                className="rounded-xl border-border bg-background cursor-pointer"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    uploadVerificationFile(file);
+                  }
+                }}
+              />
+              {gstFileName && (
+                <p className="text-xs mt-2 text-muted-foreground">
+                  Selected: {gstFileName}
+                </p>
+              )}
+            </div>
+
+            <Button
+              className="w-full rounded-full bg-blue-600 hover:bg-blue-700 text-white font-semibold mt-4 shadow-glow"
+              onClick={handleVerificationSubmit}
+              disabled={
+                !gstNumber ||
+                !gstCertificateStorageId ||
+                submittingVerification
+              }
+            >
+              {submittingVerification
+                ? "Submitting..."
+                : "Submit Verification"}
+            </Button>
+          </div>
+        </DialogContent>
       </Dialog>
     </div>
   );

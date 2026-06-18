@@ -46,6 +46,10 @@ export default defineSchema({
     gstNumber: v.optional(v.string()),
     gstCertificateUrl: v.optional(v.string()),
     gstCertificateStorageId: v.optional(v.string()),
+    // Suspension fields
+    isSuspended: v.optional(v.boolean()),
+    suspensionReason: v.optional(v.string()),
+    suspendedUntil: v.optional(v.number()),
   }).index("by_userId", ["userId"]),
 
   campaigns: defineTable({
