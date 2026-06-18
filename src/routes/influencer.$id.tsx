@@ -17,6 +17,7 @@ import {
   Clock,
   Users,
   Globe,
+  ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -376,6 +377,12 @@ export function Profile() {
   const { inf } = useLoaderData() as { inf: Influencer };
   const { profile: myProfile, user, loading: authLoading } = useAuth();
 
+  const isMockId = inf.id.startsWith("brand_mock_") || !isNaN(Number(inf.id));
+  const verifiedConnections = useQuery(
+    api.social.getConnections,
+    !isMockId ? { profileId: inf.id as unknown as Id<"profiles"> } : "skip"
+  );
+
   const isBrand = inf.role === "brand";
   const brandDetails = useMemo(() => {
     if (!isBrand) return null;
@@ -434,8 +441,6 @@ export function Profile() {
   const toggleFavorite = useMutation(api.profiles.toggleFavorite);
 
   const submitReview = useMutation(api.reviews.submitReview);
-
-  const isMockId = inf.id.startsWith("brand_mock_") || !isNaN(Number(inf.id));
 
   const connectionStatus = useQuery(
     api.connections.getConnectionStatus,
@@ -771,6 +776,7 @@ export function Profile() {
       icon: Instagram,
       iconClass: "text-pink-600",
       hoverClass: "hover:border-pink-200 hover:bg-pink-50/30",
+      isVerified: verifiedConnections?.some((c: any) => c.platform === "instagram" && c.verified),
     },
     {
       label: "Facebook",
@@ -782,6 +788,7 @@ export function Profile() {
       icon: Facebook,
       iconClass: "text-blue-600",
       hoverClass: "hover:border-blue-200 hover:bg-blue-50/30",
+      isVerified: verifiedConnections?.some((c: any) => c.platform === "facebook" && c.verified),
     },
     {
       label: "LinkedIn",
@@ -793,6 +800,7 @@ export function Profile() {
       icon: Linkedin,
       iconClass: "text-blue-800",
       hoverClass: "hover:border-blue-300 hover:bg-blue-50/30",
+      isVerified: verifiedConnections?.some((c: any) => c.platform === "linkedin" && c.verified),
     },
     {
       label: "YouTube",
@@ -804,6 +812,7 @@ export function Profile() {
       icon: Youtube,
       iconClass: "text-red-600",
       hoverClass: "hover:border-red-200 hover:bg-red-50/30",
+      isVerified: verifiedConnections?.some((c: any) => c.platform === "youtube" && c.verified),
     },
     {
       label: "Quora",
@@ -815,6 +824,7 @@ export function Profile() {
       icon: QuoraIcon,
       iconClass: "text-red-700",
       hoverClass: "hover:border-red-200 hover:bg-red-50/30",
+      isVerified: false,
     },
     {
       label: "X (Twitter)",
@@ -826,6 +836,7 @@ export function Profile() {
       icon: Twitter,
       iconClass: "text-sky-500",
       hoverClass: "hover:border-sky-200 hover:bg-sky-50/30",
+      isVerified: verifiedConnections?.some((c: any) => c.platform === "twitter" && c.verified),
     },
   ].filter((item) => item.handle);
 
@@ -1037,9 +1048,16 @@ export function Profile() {
                         rel="noreferrer"
                         className={`flex h-28 flex-col items-center justify-center rounded-2xl border border-border bg-card p-4 text-center shadow-sm transition-all group ${social.hoverClass}`}
                       >
-                        <Icon
-                          className={`mb-1 h-5 w-5 transition-transform group-hover:scale-110 ${social.iconClass}`}
-                        />
+                        <div className="flex items-center gap-1.5 justify-center mb-1">
+                          <Icon
+                            className={`h-5 w-5 transition-transform group-hover:scale-110 ${social.iconClass}`}
+                          />
+                          {social.isVerified && (
+                            <span title="OAuth Verified" className="inline-flex items-center">
+                              <ShieldCheck className="h-4 w-4 text-primary fill-primary/10 shrink-0" />
+                            </span>
+                          )}
+                        </div>
                         <div className="font-display text-xl font-bold">
                           {formatFollowers(social.followers || 0)}
                         </div>

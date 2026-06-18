@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import {
   Eye,
   MousePointerClick,
@@ -18,6 +18,11 @@ import {
   ChevronsUpDown,
   X,
   Star,
+  Lock,
+  RotateCw,
+  ShieldCheck,
+  ExternalLink,
+  Activity,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CATEGORY_OPTIONS } from "@/data/influencers";
@@ -105,9 +110,18 @@ import {
 import { cn } from "@/lib/utils";
 import { formatINR } from "@/lib/format";
 import { useAuth } from "@/components/auth-provider";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 import { toast } from "sonner";
 
 type Tier = {
@@ -138,6 +152,15 @@ export function CreatorDash() {
     api.portfolio.getByProfile,
     profile ? { profileId: profile._id } : "skip",
   );
+
+  // Social Verification Queries & Hooks
+  const connections = useQuery(
+    api.social.getConnections,
+    profile ? { profileId: profile._id } : "skip"
+  );
+  const clientIds = useQuery(api.social.getOAuthClientIds);
+  const syncConnection = useAction(api.socialAction.syncSingleConnectionAction);
+  const disconnectPlatform = useMutation(api.social.disconnectPlatform);
 
   // Mutations
   const updateProfile = useMutation(api.profiles.update);
@@ -181,6 +204,103 @@ export function CreatorDash() {
   const [quoraFollowers, setQuoraFollowers] = useState<number>(0);
   const [twHandle, setTwHandle] = useState("");
   const [twFollowers, setTwFollowers] = useState<number>(0);
+
+  // Social Verification States & Methods
+  const [syncingPlatform, setSyncingPlatform] = useState<string | null>(null);
+  const [selectedChartPlatform, setSelectedChartPlatform] = useState<string>("instagram");
+
+  const activeChartConnection = connections?.find((c: any) => c.platform === selectedChartPlatform);
+  const history = useQuery(
+    api.social.getHistory,
+    activeChartConnection ? { connectionId: activeChartConnection._id } : "skip"
+  );
+
+  const chartData = useMemo(() => {
+    if (!history) return [];
+    return [...history]
+      .sort((a, b) => a.timestamp - b.timestamp)
+      .map((item) => ({
+        date: new Date(item.timestamp).toLocaleDateString(undefined, {
+          month: "short",
+          day: "numeric",
+        }),
+        followers: item.followers,
+        views: item.views,
+        engagement: item.engagementRate,
+      }));
+  }, [history]);
+
+  const handleConnectPlatform = (platform: string) => {
+    if (!profile || !clientIds) return;
+    const redirectUri = encodeURIComponent(`${window.location.origin}/oauth/callback`);
+    const state = `${platform}:${profile._id}:${profile.role}`;
+
+    let url = "";
+    if (platform === "youtube") {
+      const clientId = clientIds.googleClientId;
+      if (!clientId) {
+        toast.error("Google OAuth is not configured on the backend yet.");
+        return;
+      }
+      url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=https://www.googleapis.com/auth/youtube.readonly&state=${state}&access_type=offline&prompt=consent`;
+    } else if (platform === "instagram" || platform === "facebook") {
+      const clientId = clientIds.metaClientId;
+      if (!clientId) {
+        toast.error("Meta OAuth is not configured on the backend yet.");
+        return;
+      }
+      const scope = "pages_show_list,instagram_basic,instagram_manage_insights,pages_read_engagement";
+      url = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&state=${state}&scope=${scope}`;
+    } else if (platform === "linkedin") {
+      const clientId = clientIds.linkedinClientId;
+      if (!clientId) {
+        toast.error("LinkedIn OAuth is not configured on the backend yet.");
+        return;
+      }
+      url = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&state=${state}&scope=openid%20profile%20w_member_social`;
+    } else if (platform === "twitter") {
+      const clientId = clientIds.twitterClientId;
+      if (!clientId) {
+        toast.error("Twitter OAuth is not configured on the backend yet.");
+        return;
+      }
+      sessionStorage.setItem("twitter_code_verifier", "challenge");
+      url = `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=users.read%20tweet.read%20offline.access&state=${state}&code_challenge=challenge&code_challenge_method=plain`;
+    }
+
+    if (url) {
+      window.location.href = url;
+    }
+  };
+
+  const handleManualSync = async (connectionId: Id<"socialConnections">, platform: string) => {
+    setSyncingPlatform(platform);
+    const toastId = toast.loading(`Synchronizing ${platform.toUpperCase()} analytics...`);
+    try {
+      const res: any = await syncConnection({ connectionId });
+      if (res.success) {
+        toast.success(`${platform.toUpperCase()} metrics updated successfully!`, { id: toastId });
+      } else {
+        toast.error(`Sync failed: ${res.error}`, { id: toastId });
+      }
+    } catch (err) {
+      const e = err as Error;
+      toast.error(e.message || "Failed to trigger sync", { id: toastId });
+    } finally {
+      setSyncingPlatform(null);
+    }
+  };
+
+  const handleDisconnect = async (connectionId: Id<"socialConnections">, platform: string) => {
+    if (!confirm(`Are you sure you want to disconnect your verified ${platform.toUpperCase()} account?`)) return;
+    try {
+      await disconnectPlatform({ connectionId });
+      toast.success(`Disconnected verified ${platform.toUpperCase()} account.`);
+    } catch (err) {
+      const e = err as Error;
+      toast.error(e.message || "Failed to disconnect account.");
+    }
+  };
 
   const selectedCategories = category
     ? category
@@ -823,201 +943,268 @@ export function CreatorDash() {
               Social presence
             </h3>
             <p className="mb-4 text-xs text-muted-foreground">
-              Update your social handles and follower counts manually.
+              Verify your accounts using official OAuth platforms or update them manually.
             </p>
-            <div className="grid gap-3 grid-cols-2 lg:grid-cols-3">
-              <div className="space-y-3 rounded-2xl border border-border p-3 sm:p-4 bg-muted/20">
-                <div className="flex items-center gap-2">
-                  <Instagram className="h-4 w-4 text-pink-600" />
-                  <span className="text-sm font-semibold text-ellipsis overflow-hidden whitespace-nowrap">
-                    Instagram
-                  </span>
-                </div>
-                <div>
-                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                    Handle
-                  </Label>
-                  <Input
-                    size={1}
-                    value={instaHandle}
-                    onChange={(e) => setInstaHandle(e.target.value)}
-                    placeholder="@username"
-                    className="h-8 text-xs"
-                  />
-                </div>
-                <div>
-                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                    Followers
-                  </Label>
-                  <Input
-                    type="number"
-                    value={instaFollowers}
-                    onChange={(e) => setInstaFollowers(Number(e.target.value))}
-                    className="h-8 text-xs"
-                  />
-                </div>
-              </div>
+            <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+              {[
+                {
+                  id: "instagram",
+                  name: "Instagram",
+                  icon: Instagram,
+                  iconClass: "text-pink-600",
+                  handle: instaHandle,
+                  setHandle: setInstaHandle,
+                  followers: instaFollowers,
+                  setFollowers: setInstaFollowers,
+                  oauth: true,
+                },
+                {
+                  id: "facebook",
+                  name: "Facebook",
+                  icon: Facebook,
+                  iconClass: "text-blue-600",
+                  handle: fbHandle,
+                  setHandle: setFbHandle,
+                  followers: fbFollowers,
+                  setFollowers: setFbFollowers,
+                  oauth: true,
+                },
+                {
+                  id: "linkedin",
+                  name: "LinkedIn",
+                  icon: Linkedin,
+                  iconClass: "text-blue-800",
+                  handle: liHandle,
+                  setHandle: setLiHandle,
+                  followers: liFollowers,
+                  setFollowers: setLiFollowers,
+                  oauth: true,
+                },
+                {
+                  id: "youtube",
+                  name: "YouTube",
+                  icon: Youtube,
+                  iconClass: "text-red-600",
+                  handle: ytHandle,
+                  setHandle: setYtHandle,
+                  followers: ytFollowers,
+                  setFollowers: setYtFollowers,
+                  oauth: true,
+                },
+                {
+                  id: "quora",
+                  name: "Quora",
+                  icon: QuoraIcon,
+                  iconClass: "text-red-700",
+                  handle: quoraHandle,
+                  setHandle: setQuoraHandle,
+                  followers: quoraFollowers,
+                  setFollowers: setQuoraFollowers,
+                  oauth: false,
+                },
+                {
+                  id: "twitter",
+                  name: "X (Twitter)",
+                  icon: Twitter,
+                  iconClass: "text-sky-500",
+                  handle: twHandle,
+                  setHandle: setTwHandle,
+                  followers: twFollowers,
+                  setFollowers: setTwFollowers,
+                  oauth: true,
+                },
+              ].map((plat) => {
+                const conn = connections?.find((c: any) => c.platform === plat.id);
+                const isVerified = conn?.verified;
+                const Icon = plat.icon;
 
-              <div className="space-y-3 rounded-2xl border border-border p-3 sm:p-4 bg-muted/20">
-                <div className="flex items-center gap-2">
-                  <Facebook className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm font-semibold text-ellipsis overflow-hidden whitespace-nowrap">
-                    Facebook
-                  </span>
-                </div>
-                <div>
-                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                    Handle
-                  </Label>
-                  <Input
-                    size={1}
-                    value={fbHandle}
-                    onChange={(e) => setFbHandle(e.target.value)}
-                    placeholder="username"
-                    className="h-8 text-xs"
-                  />
-                </div>
-                <div>
-                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                    Followers
-                  </Label>
-                  <Input
-                    type="number"
-                    value={fbFollowers}
-                    onChange={(e) => setFbFollowers(Number(e.target.value))}
-                    className="h-8 text-xs"
-                  />
-                </div>
-              </div>
+                return (
+                  <div
+                    key={plat.id}
+                    className={cn(
+                      "space-y-3 rounded-2xl border p-3 sm:p-4 bg-muted/20 relative transition-all duration-200",
+                      isVerified ? "border-primary/40 bg-primary/5 shadow-sm" : "border-border"
+                    )}
+                  >
+                    <div className="flex items-center justify-between gap-1">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <Icon className={cn("h-4 w-4 shrink-0", plat.iconClass)} />
+                        <span className="text-sm font-semibold truncate">
+                          {plat.name}
+                        </span>
+                        {isVerified && (
+                          <span title="OAuth Verified">
+                            <ShieldCheck className="h-4 w-4 text-primary fill-primary/10 shrink-0" />
+                          </span>
+                        )}
+                      </div>
+                      {plat.oauth && (
+                        <div className="flex items-center gap-1.5">
+                          {isVerified ? (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => handleManualSync(conn._id, plat.id)}
+                                disabled={syncingPlatform !== null}
+                                className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded hover:bg-secondary cursor-pointer"
+                                title="Force sync now"
+                              >
+                                <RotateCw className={cn("h-3.5 w-3.5", syncingPlatform === plat.id && "animate-spin")} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDisconnect(conn._id, plat.id)}
+                                className="text-xs text-destructive hover:underline font-medium cursor-pointer"
+                              >
+                                Disconnect
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleConnectPlatform(plat.id)}
+                              className="text-[10px] font-bold uppercase tracking-wider text-primary hover:underline cursor-pointer"
+                            >
+                              Verify OAuth
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
 
-              <div className="space-y-3 rounded-2xl border border-border p-3 sm:p-4 bg-muted/20">
-                <div className="flex items-center gap-2">
-                  <Linkedin className="h-4 w-4 text-blue-800" />
-                  <span className="text-sm font-semibold text-ellipsis overflow-hidden whitespace-nowrap">
-                    LinkedIn
-                  </span>
-                </div>
-                <div>
-                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                    Handle
-                  </Label>
-                  <Input
-                    size={1}
-                    value={liHandle}
-                    onChange={(e) => setLiHandle(e.target.value)}
-                    placeholder="in/username"
-                    className="h-8 text-xs"
-                  />
-                </div>
-                <div>
-                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                    Followers
-                  </Label>
-                  <Input
-                    type="number"
-                    value={liFollowers}
-                    onChange={(e) => setLiFollowers(Number(e.target.value))}
-                    className="h-8 text-xs"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-3 rounded-2xl border border-border p-3 sm:p-4 bg-muted/20">
-                <div className="flex items-center gap-2">
-                  <Youtube className="h-4 w-4 text-red-600" />
-                  <span className="text-sm font-semibold text-ellipsis overflow-hidden whitespace-nowrap">
-                    YouTube
-                  </span>
-                </div>
-                <div>
-                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                    Handle
-                  </Label>
-                  <Input
-                    size={1}
-                    value={ytHandle}
-                    onChange={(e) => setYtHandle(e.target.value)}
-                    placeholder="@username"
-                    className="h-8 text-xs"
-                  />
-                </div>
-                <div>
-                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                    Followers
-                  </Label>
-                  <Input
-                    type="number"
-                    value={ytFollowers}
-                    onChange={(e) => setYtFollowers(Number(e.target.value))}
-                    className="h-8 text-xs"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-3 rounded-2xl border border-border p-3 sm:p-4 bg-muted/20">
-                <div className="flex items-center gap-2">
-                  <QuoraIcon className="h-4 w-4 text-red-700" />
-                  <span className="text-sm font-semibold text-ellipsis overflow-hidden whitespace-nowrap">
-                    Quora
-                  </span>
-                </div>
-                <div>
-                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                    Handle
-                  </Label>
-                  <Input
-                    size={1}
-                    value={quoraHandle}
-                    onChange={(e) => setQuoraHandle(e.target.value)}
-                    placeholder="username"
-                    className="h-8 text-xs"
-                  />
-                </div>
-                <div>
-                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                    Followers
-                  </Label>
-                  <Input
-                    type="number"
-                    value={quoraFollowers}
-                    onChange={(e) => setQuoraFollowers(Number(e.target.value))}
-                    className="h-8 text-xs"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-3 rounded-2xl border border-border p-3 sm:p-4 bg-muted/20">
-                <div className="flex items-center gap-2">
-                  <Twitter className="h-4 w-4 text-sky-500" />
-                  <span className="text-sm font-semibold text-ellipsis overflow-hidden whitespace-nowrap">
-                    X (Twitter)
-                  </span>
-                </div>
-                <div>
-                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                    Handle
-                  </Label>
-                  <Input
-                    size={1}
-                    value={twHandle}
-                    onChange={(e) => setTwHandle(e.target.value)}
-                    placeholder="@username"
-                    className="h-8 text-xs"
-                  />
-                </div>
-                <div>
-                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                    Followers
-                  </Label>
-                  <Input
-                    type="number"
-                    value={twFollowers}
-                    onChange={(e) => setTwFollowers(Number(e.target.value))}
-                    className="h-8 text-xs"
-                  />
-                </div>
-              </div>
+                    {isVerified ? (
+                      <div className="space-y-2 pt-1">
+                        <div className="flex items-center justify-between text-xs border-b border-border/40 pb-1.5">
+                          <span className="text-muted-foreground">Handle:</span>
+                          <span className="font-semibold text-foreground truncate max-w-[120px]">
+                            {conn.handle}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs border-b border-border/40 pb-1.5">
+                          <span className="text-muted-foreground">Followers:</span>
+                          <span className="font-semibold text-foreground flex items-center gap-1">
+                            <Lock className="h-3 w-3 text-muted-foreground/60" />
+                            {conn.followers?.toLocaleString() || "0"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground">Sync Status:</span>
+                          <span className="flex items-center gap-1.5 font-medium">
+                            <span
+                              className={cn(
+                                "h-2 w-2 rounded-full",
+                                conn.syncStatus === "success" && "bg-emerald-500",
+                                conn.syncStatus === "syncing" && "bg-amber-500 animate-pulse",
+                                conn.syncStatus === "failed" && "bg-destructive"
+                              )}
+                            />
+                            <span className="text-[10px] capitalize text-muted-foreground">
+                              {conn.syncStatus}
+                            </span>
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div>
+                          <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                            Handle
+                          </Label>
+                          <Input
+                            size={1}
+                            value={plat.handle}
+                            onChange={(e) => plat.setHandle(e.target.value)}
+                            placeholder={plat.id === "linkedin" ? "in/username" : plat.id === "quora" ? "username" : "@username"}
+                            className="h-8 text-xs mt-0.5"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                            Followers
+                          </Label>
+                          <Input
+                            type="number"
+                            value={plat.followers}
+                            onChange={(e) => plat.setFollowers(Number(e.target.value))}
+                            className="h-8 text-xs mt-0.5"
+                          />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
             </div>
+
+            {/* Growth trends charts if verified accounts exist */}
+            {connections && connections.some((c: any) => c.verified) && (
+              <div className="mt-6 border border-border rounded-2xl p-4 bg-muted/5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-semibold flex items-center gap-1.5">
+                      <Activity className="h-4 w-4 text-primary" /> Verified Analytics Trends
+                    </h4>
+                    <p className="text-[10px] text-muted-foreground">
+                      Growth analytics fetched from official platform endpoints.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] text-muted-foreground">Platform:</span>
+                    <select
+                      value={selectedChartPlatform}
+                      onChange={(e) => setSelectedChartPlatform(e.target.value)}
+                      className="rounded-full border border-border bg-background px-3 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
+                    >
+                      {connections
+                        .filter((c: any) => c.verified)
+                        .map((c: any) => (
+                          <option key={c._id} value={c.platform}>
+                            {c.platform.toUpperCase()}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                </div>
+
+                {chartData.length > 0 ? (
+                  <div className="h-48 w-full mt-2">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="colorFollowers" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.2} />
+                            <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                        <XAxis dataKey="date" stroke="#94a3b8" fontSize={9} />
+                        <YAxis stroke="#94a3b8" fontSize={9} />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "hsl(var(--card))",
+                            borderColor: "hsl(var(--border))",
+                            borderRadius: "12px",
+                          }}
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="followers"
+                          stroke="#f43f5e"
+                          strokeWidth={2}
+                          fillOpacity={1}
+                          fill="url(#colorFollowers)"
+                          name="Followers"
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <div className="h-32 flex items-center justify-center border border-dashed border-border rounded-xl text-xs text-muted-foreground">
+                    No historical sync metrics logged for this account yet. Sync runs automatically every 12 hours.
+                  </div>
+                )}
+              </div>
+            )}
 
             <h3 className="mt-8 font-display text-base font-semibold">
               Portfolio

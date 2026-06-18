@@ -37,6 +37,12 @@ export default defineSchema({
     prefRegions: v.optional(v.string()),
     website: v.optional(v.string()),
     companySize: v.optional(v.string()),
+    // Verification fields
+    verificationStatus: v.optional(v.string()),
+    aadharStorageId: v.optional(v.string()),
+    aadharUrl: v.optional(v.string()),
+    panStorageId: v.optional(v.string()),
+    panUrl: v.optional(v.string()),
   }).index("by_userId", ["userId"]),
 
   campaigns: defineTable({
@@ -132,5 +138,41 @@ export default defineSchema({
     .index("by_creator", ["creatorId"])
     .index("by_brand", ["brandId"])
     .index("by_creator_brand", ["creatorId", "brandId"]),
+
+  socialConnections: defineTable({
+    profileId: v.id("profiles"),
+    ownerType: v.union(v.literal("creator"), v.literal("brand")),
+    platform: v.string(),
+    handle: v.string(),
+    accountId: v.string(),
+    encryptedAccessToken: v.optional(v.string()),
+    encryptedRefreshToken: v.optional(v.string()),
+    expiresAt: v.optional(v.number()),
+    verified: v.boolean(),
+    lastSyncedAt: v.optional(v.number()),
+    syncStatus: v.union(v.literal("success"), v.literal("failed"), v.literal("syncing")),
+    syncMode: v.union(v.literal("live"), v.literal("manual")),
+    lastError: v.optional(v.string()),
+    failureCount: v.number(),
+    accountHealth: v.union(v.literal("healthy"), v.literal("warning"), v.literal("error")),
+    followers: v.optional(v.number()),
+    subscribers: v.optional(v.number()),
+    views: v.optional(v.number()),
+    engagementRate: v.optional(v.number()),
+  })
+    .index("by_profile", ["profileId"])
+    .index("by_profile_platform", ["profileId", "platform"])
+    .index("by_verified", ["verified"]),
+
+  socialAnalyticsHistory: defineTable({
+    connectionId: v.id("socialConnections"),
+    timestamp: v.number(),
+    followers: v.number(),
+    views: v.optional(v.number()),
+    engagementRate: v.optional(v.number()),
+    metadata: v.optional(v.string()),
+  })
+    .index("by_connection", ["connectionId"])
+    .index("by_connection_time", ["connectionId", "timestamp"]),
 });
 

@@ -89,7 +89,9 @@ export function MessagesPage() {
 
       <div className="grid h-[600px] lg:h-[700px] gap-6 lg:grid-cols-[350px_1fr]">
         {/* LEFT: Sidebar */}
-        <div className={`flex flex-col rounded-3xl border border-border bg-card overflow-hidden ${activeConv ? "hidden lg:flex" : "flex"}`}>
+        <div
+          className={`flex flex-col rounded-3xl border border-border bg-card overflow-hidden ${activeConv ? "hidden lg:flex" : "flex"}`}
+        >
           <div className="p-4 border-b border-border space-y-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -207,7 +209,9 @@ export function MessagesPage() {
         </div>
 
         {/* RIGHT: Chat Area */}
-        <div className={`flex flex-col rounded-3xl border border-border bg-card overflow-hidden relative ${activeConv ? "flex" : "hidden lg:flex"}`}>
+        <div
+          className={`flex flex-col rounded-3xl border border-border bg-card overflow-hidden relative ${activeConv ? "flex" : "hidden lg:flex"}`}
+        >
           {activeConv ? (
             <div className="h-full flex flex-col">
               <ChatDialog

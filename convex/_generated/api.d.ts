@@ -11,6 +11,7 @@
 import type * as admin from "../admin.js";
 import type * as campaigns from "../campaigns.js";
 import type * as connections from "../connections.js";
+import type * as crons from "../crons.js";
 import type * as messages from "../messages.js";
 import type * as otp from "../otp.js";
 import type * as otpAction from "../otpAction.js";
@@ -19,6 +20,8 @@ import type * as pricing from "../pricing.js";
 import type * as profiles from "../profiles.js";
 import type * as reviews from "../reviews.js";
 import type * as seed from "../seed.js";
+import type * as social from "../social.js";
+import type * as socialAction from "../socialAction.js";
 
 import type {
   ApiFromModules,
@@ -30,6 +33,7 @@ declare const fullApi: ApiFromModules<{
   admin: typeof admin;
   campaigns: typeof campaigns;
   connections: typeof connections;
+  crons: typeof crons;
   messages: typeof messages;
   otp: typeof otp;
   otpAction: typeof otpAction;
@@ -38,6 +42,8 @@ declare const fullApi: ApiFromModules<{
   profiles: typeof profiles;
   reviews: typeof reviews;
   seed: typeof seed;
+  social: typeof social;
+  socialAction: typeof socialAction;
 }>;
 
 /**

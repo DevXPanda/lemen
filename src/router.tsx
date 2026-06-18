@@ -11,6 +11,7 @@ import { CreatorDash } from "./routes/dashboard.influencer";
 import { ResetPassword } from "./routes/reset-password";
 import ProtectionInfo from "./routes/ProtectionInfo";
 import { ConnectionsPage } from "./routes/connections";
+import { OAuthCallbackPage } from "./routes/oauth-callback";
 
 function DefaultErrorComponent() {
   const error = useRouteError() as Error;
@@ -104,6 +105,10 @@ export const router = createBrowserRouter([
       {
         path: "/dashboard/influencer",
         element: <CreatorDash />,
+      },
+      {
+        path: "/oauth/callback",
+        element: <OAuthCallbackPage />,
       },
       {
         path: "/protection-info",
