@@ -47,6 +47,12 @@ export type Profile = {
   prefRegions?: string;
   website?: string;
   companySize?: string;
+  // Verification
+verificationStatus?: string;
+aadharUrl?: string;
+panUrl?: string;
+aadharStorageId?: string;
+panStorageId?: string;
 };
 
 type AuthCtx = {
@@ -78,7 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const saved = localStorage.getItem("lumen_user");
+    const saved = localStorage.getItem(" Pravixo_user");
     if (saved) {
       setUser(JSON.parse(saved));
     }
@@ -103,7 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     setUser(mockUser);
-    localStorage.setItem("lumen_user", JSON.stringify(mockUser));
+    localStorage.setItem(" Pravixo_user", JSON.stringify(mockUser));
   };
 
   const signUpMock = async (
@@ -125,12 +131,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     setUser(mockUser);
-    localStorage.setItem("lumen_user", JSON.stringify(mockUser));
+    localStorage.setItem(" Pravixo_user", JSON.stringify(mockUser));
   };
 
   const signOut = async () => {
     setUser(null);
-    localStorage.removeItem("lumen_user");
+    localStorage.removeItem(" Pravixo_user");
   };
 
   return (

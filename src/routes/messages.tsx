@@ -27,7 +27,7 @@ export function MessagesPage() {
   >("all");
 
   useEffect(() => {
-    document.title = "Messages — Lumen";
+    document.title = "Messages —  Pravixo";
   }, []);
 
   const conversations = useQuery(

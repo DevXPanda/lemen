@@ -18,6 +18,7 @@ import { Button } from "./ui/button";
 import { Toaster } from "./ui/sonner";
 import { ConvexProvider } from "convex/react";
 import { convex } from "@/lib/convex";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { ThemeProvider } from "./theme-provider";
 import { AdminGuard } from "./admin-guard";
 import { Separator } from "./ui/separator";
@@ -28,6 +29,7 @@ import {
   TooltipTrigger,
 } from "./ui/tooltip";
 
+
 const navLinks = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/users", label: "Users", icon: Users },
@@ -36,6 +38,7 @@ const navLinks = [
 ];
 
 function SidebarContent() {
+  const [verificationOpen, setVerificationOpen] = useState(false);
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { theme, toggle } = useTheme();
@@ -55,7 +58,7 @@ function SidebarContent() {
         </div>
         <div>
           <span className="font-display text-lg font-bold tracking-tight">
-            Lumen
+            Pravixo 
           </span>
           <div className="flex items-center gap-1.5">
             <Shield className="h-3 w-3 text-primary" />
@@ -89,6 +92,53 @@ function SidebarContent() {
             </Link>
           );
         })}
+        <div className="space-y-1">
+ <button
+  onClick={() => setVerificationOpen(!verificationOpen)}
+  className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
+    pathname.startsWith("/verification-requests")
+      ? "gradient-sunset text-white shadow-glow"
+      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+  }`}
+>
+  <div className="flex items-center gap-3">
+    <Shield className="h-4.5 w-4.5" />
+    <span>Verification Requests</span>
+  </div>
+
+  {verificationOpen ? (
+    <ChevronDown className="h-4 w-4" />
+  ) : (
+    <ChevronRight className="h-4 w-4" />
+  )}
+</button>
+
+  {verificationOpen && (
+    <div className="ml-8 space-y-1">
+      <Link
+        to="/verification-requests/creators"
+        className={`block rounded-lg px-3 py-2 text-sm ${
+          pathname === "/verification-requests/creators"
+            ? "gradient-sunset text-white shadow-glow"
+            : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+        }`}
+      >
+        Creator Requests
+      </Link>
+
+      <Link
+        to="/verification-requests/brands"
+        className={`block rounded-lg px-3 py-2 text-sm ${
+          pathname === "/verification-requests/brands"
+            ? "gradient-sunset text-white shadow-glow"
+            : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+        }`}
+      >
+        Brand Requests
+      </Link>
+    </div>
+  )}
+</div>
       </nav>
 
       <Separator />
@@ -172,7 +222,7 @@ function AdminShell() {
             <div className="flex h-7 w-7 items-center justify-center rounded-lg gradient-sunset">
               <Sparkles className="h-3.5 w-3.5 text-white" />
             </div>
-            <span className="font-display text-sm font-bold">Lumen Admin</span>
+            <span className="font-display text-sm font-bold">Pravixo Admin</span>
           </div>
         </header>
 

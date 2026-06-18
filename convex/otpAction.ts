@@ -63,9 +63,9 @@ export const sendOtp = action({
         });
 
         await transporter.sendMail({
-          from: process.env.SMTP_FROM || `"Lumen" <no-reply@lumen.com>`,
+          from: process.env.SMTP_FROM || `"Pravixo" <no-reply@pravixo.com>`,
           to: email,
-          subject: "Verify your email - Lumen",
+          subject: "Verify your email - Pravixo",
           text: `Your verification code is ${otpCode}. This code will expire in 5 minutes.`,
           html: `<p>Your verification code is <strong>${otpCode}</strong>. This code will expire in 5 minutes.</p>`,
         });
@@ -95,9 +95,9 @@ export const sendOtp = action({
         });
 
         const info = await transporter.sendMail({
-          from: `"Lumen" <no-reply@lumen.com>`,
+          from: `"Pravixo" <no-reply@pravixo.com>`,
           to: email,
-          subject: "Verify your email - Lumen",
+          subject: "Verify your email - Pravixo",
           text: `Your verification code is ${otpCode}. This code will expire in 5 minutes.`,
           html: `<p>Your verification code is <strong>${otpCode}</strong>. This code will expire in 5 minutes.</p>`,
         });
@@ -169,9 +169,9 @@ export const sendResetLink = action({
         });
 
         await transporter.sendMail({
-          from: process.env.SMTP_FROM || `"Lumen" <no-reply@lumen.com>`,
+          from: process.env.SMTP_FROM || `" Pravixo" <no-reply@ Pravixo.com>`,
           to: email,
-          subject: "Reset your password - Lumen",
+          subject: "Reset your password -  Pravixo",
           text: `Please reset your password using the following link (valid for 15 minutes):\n\n${resetLink}`,
           html: `<p>Please reset your password by clicking the link below (valid for 15 minutes):</p><p><a href="${resetLink}">Reset Password</a></p>`,
         });
@@ -201,9 +201,9 @@ export const sendResetLink = action({
         });
 
         const info = await transporter.sendMail({
-          from: `"Lumen" <no-reply@lumen.com>`,
+          from: `" Pravixo" <no-reply@ Pravixo.com>`,
           to: email,
-          subject: "Reset your password - Lumen",
+          subject: "Reset your password -  Pravixo",
           text: `Please reset your password using the following link (valid for 15 minutes):\n\n${resetLink}`,
           html: `<p>Please reset your password by clicking the link below (valid for 15 minutes):</p><p><a href="${resetLink}">Reset Password</a></p>`,
         });

@@ -13,7 +13,7 @@ export function MessagesPage() {
   const { id } = useParams<{ id: string }>();
 
   useEffect(() => {
-    document.title = "Messages — Lumen Admin";
+    document.title = "Messages —  Pravixo Admin";
   }, []);
 
   const data = useQuery(

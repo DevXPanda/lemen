@@ -13,6 +13,7 @@ export type Influencer = {
   cover: string;
   bio: string;
   role?: "creator" | "brand";
+  verificationStatus?: string;
   // Stats
   profileViews?: number;
   clicks?: number;

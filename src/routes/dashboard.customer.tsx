@@ -154,6 +154,9 @@ export function CustomerDash() {
   const setAvatarImage = useMutation(api.profiles.setAvatarImage);
   const setCoverImage = useMutation(api.profiles.setCoverImage);
   const toggleVisibility = useMutation(api.reviews.toggleReviewVisibility);
+  const submitBrandVerification = useMutation(
+  api.profiles.submitBrandVerification,
+);
 
   // Campaigns Mutations
   const createCampaign = useMutation(api.campaigns.create);
@@ -204,10 +207,27 @@ export function CustomerDash() {
   const [campCategory, setCampCategory] = useState("");
   const [campDuration, setCampDuration] = useState("");
   const [campActive, setCampActive] = useState(true);
+  const [campaignDialogOpen, setCampaignDialogOpen] = useState(false);
   const [savingCampaign, setSavingCampaign] = useState(false);
+  
+  const [showVerificationDialog, setShowVerificationDialog] =
+  useState(false);
+
+const [gstNumber, setGstNumber] = useState("");
+
+const [gstCertificateStorageId, setGstCertificateStorageId] =
+  useState("");
+
+const [gstFileName, setGstFileName] = useState("");
+
+
+
+
+const [submittingVerification, setSubmittingVerification] =
+  useState(false);
 
   useEffect(() => {
-    document.title = "Brand dashboard — Lumen";
+    document.title = "Brand dashboard —  Pravixo";
   }, []);
 
   useEffect(() => {
@@ -438,6 +458,60 @@ export function CustomerDash() {
       if (fileRef.current) fileRef.current.value = "";
     }
   };
+ const uploadVerificationFile = async (
+  file: File,
+) => {
+  try {
+    const postUrl = await generateUploadUrl();
+
+    const result = await fetch(postUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": file.type,
+      },
+      body: file,
+    });
+
+    const { storageId } =
+      await result.json();
+
+    setGstCertificateStorageId(storageId);
+    setGstFileName(file.name);
+
+    toast.success("GST Certificate uploaded");
+  } catch {
+    toast.error("Upload failed");
+  }
+};
+const handleVerificationSubmit = async () => {
+  if (
+    !profile ||
+    !gstNumber ||
+    !gstCertificateStorageId
+  )
+    return;
+
+  setSubmittingVerification(true);
+
+  try {
+    await submitBrandVerification({
+      profileId: profile._id,
+      gstNumber,
+      gstCertificateStorageId,
+    });
+
+    toast.success(
+      "Verification submitted successfully",
+    );
+
+    setShowVerificationDialog(false);
+  } catch (err) {
+    const e = err as Error;
+    toast.error(e.message);
+  } finally {
+    setSubmittingVerification(false);
+  }
+};
 
   const handleRemoveGalleryImage = async (id: Id<"portfolioImages">) => {
     try {
@@ -635,9 +709,11 @@ export function CustomerDash() {
                 <h1 className="font-display text-2xl font-bold sm:text-3xl text-foreground">
                   {fullName || "Company Name"}
                 </h1>
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full gradient-sunset shadow-sm">
-                  <Check className="h-3 w-3 text-white" />
-                </span>
+                {profile?.verificationStatus === "verified" && (
+  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-green-500 shadow-sm">
+    <Check className="h-3 w-3 text-white" />
+  </span>
+)}
               </div>
               <p className="text-lg font-medium text-muted-foreground/90">
                 {handle ? `@${handle.replace("@", "")}` : "@handle"}
@@ -665,16 +741,25 @@ export function CustomerDash() {
               )}
             </div>
           </div>
-          <div className="flex gap-2">
-            <Link to={`/influencer/${profile?._id}`}>
-              <Button
-                variant="outline"
-                className="rounded-full text-xs font-semibold px-5"
-              >
-                View Public Profile
-              </Button>
-            </Link>
-          </div>
+          <div className="flex items-center gap-2">
+  <Link to={`/influencer/${profile?._id}`}>
+    <Button
+      variant="outline"
+      className="rounded-full text-xs font-semibold px-5"
+    >
+      View Public Profile
+    </Button>
+  </Link>
+
+  <Button
+  onClick={() =>
+    setShowVerificationDialog(true)
+  }
+  className="rounded-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-5"
+>
+  Get Verified
+</Button>
+</div>
         </div>
 
         {/* CONNECTION REQUESTS AT TOP */}
@@ -1849,6 +1934,73 @@ export function CustomerDash() {
             </DialogFooter>
           </form>
         </DialogContent>
+        <Dialog
+  open={showVerificationDialog}
+  onOpenChange={setShowVerificationDialog}
+>
+  <DialogContent className="sm:max-w-md">
+    <DialogHeader>
+      <DialogTitle>
+        Brand Verification
+      </DialogTitle>
+
+      <DialogDescription>
+        Enter GST Number and upload GST Certificate.
+      </DialogDescription>
+    </DialogHeader>
+
+    <div className="space-y-4">
+      <div>
+        <Label>GST Number</Label>
+
+        <Input
+          value={gstNumber}
+          onChange={(e) =>
+            setGstNumber(e.target.value)
+          }
+          placeholder="Enter GST Number"
+        />
+      </div>
+
+      <div>
+        <Label>GST Certificate</Label>
+
+        <Input
+          type="file"
+          accept="image/*,.pdf"
+          onChange={(e) => {
+            const file =
+              e.target.files?.[0];
+
+            if (file) {
+              uploadVerificationFile(file);
+            }
+          }}
+        />
+
+        {gstFileName && (
+          <p className="text-xs mt-2">
+            Selected: {gstFileName}
+          </p>
+        )}
+      </div>
+
+      <Button
+        className="w-full"
+        onClick={handleVerificationSubmit}
+        disabled={
+          !gstNumber ||
+          !gstCertificateStorageId ||
+          submittingVerification
+        }
+      >
+        {submittingVerification
+          ? "Submitting..."
+          : "Submit Verification"}
+      </Button>
+    </div>
+  </DialogContent>
+</Dialog>
       </Dialog>
     </div>
   );

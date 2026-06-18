@@ -14,7 +14,7 @@ export function AdminLogin() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    document.title = "Admin Login — Lumen";
+    document.title = "Admin Login —  Pravixo";
     // If already authed, redirect
     if (
       localStorage.getItem("admin_authed") === "true" ||
@@ -59,7 +59,7 @@ export function AdminLogin() {
             <Sparkles className="h-8 w-8 text-white" />
           </div>
           <h1 className="mt-4 font-display text-2xl font-bold tracking-tight">
-            Lumen Admin
+            Pravixo Admin
           </h1>
           <div className="mt-1 flex items-center gap-1.5 text-muted-foreground">
             <Shield className="h-3.5 w-3.5" />

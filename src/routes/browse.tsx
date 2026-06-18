@@ -1,7 +1,7 @@
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
-import { Search, MapPin, Star, SlidersHorizontal, X } from "lucide-react";
+import { Search, MapPin, Star, SlidersHorizontal, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
@@ -33,7 +33,7 @@ export function Browse() {
   };
 
   useEffect(() => {
-    document.title = `Browse ${role === "brand" ? "brands" : "creators"} — Lumen`;
+    document.title = `Browse ${role === "brand" ? "brands" : "creators"} — Pravixo `;
   }, [role]);
   const [activeCats, setActiveCats] = useState<string[]>([]);
   const [price, setPrice] = useState<number[]>([150000]);
@@ -75,6 +75,7 @@ export function Browse() {
             p.coverUrl ||
             `https://api.dicebear.com/7.x/shapes/svg?seed=${p.fullName}`,
           bio: p.bio || "",
+          verificationStatus: p.verificationStatus,
         }) as Influencer,
     );
 
@@ -370,8 +371,13 @@ export function Browse() {
                     />
                     <div className="mt-2.5 sm:mt-3 flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <h3 className="truncate font-display font-semibold text-xs sm:text-base">
-                          {inf.name}
+                        <h3 className="truncate font-display font-semibold text-xs sm:text-base flex items-center gap-1">
+                          <span className="truncate">{inf.name}</span>
+                          {inf.verificationStatus === "verified" && (
+                            <span className="flex h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 items-center justify-center rounded-full gradient-sunset text-white shadow-sm">
+                              <Check className="h-2.5 w-2.5 text-white" />
+                            </span>
+                          )}
                         </h3>
                         <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
                           {inf.handle}
