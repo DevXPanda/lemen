@@ -619,7 +619,7 @@ const [verificationUploading, setVerificationUploading] =
     const status = profile?.verificationStatus;
     if (status === "verified") {
       return (
-        <Button className="rounded-full bg-red-600 hover:bg-red-600 text-white px-6 cursor-default flex items-center gap-1.5 font-semibold">
+        <Button className="rounded-full bg-emerald-600 hover:bg-emerald-600 text-white px-6 cursor-default flex items-center gap-1.5 font-semibold">
           <Check className="h-4 w-4" /> Verified
         </Button>
       );

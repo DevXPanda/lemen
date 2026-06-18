@@ -48,11 +48,15 @@ export type Profile = {
   website?: string;
   companySize?: string;
   // Verification
-verificationStatus?: string;
-aadharUrl?: string;
-panUrl?: string;
-aadharStorageId?: string;
-panStorageId?: string;
+  verificationStatus?: string;
+  aadharUrl?: string;
+  panUrl?: string;
+  aadharStorageId?: string;
+  panStorageId?: string;
+  // Suspension
+  isSuspended?: boolean;
+  suspensionReason?: string;
+  suspendedUntil?: number;
 };
 
 type AuthCtx = {

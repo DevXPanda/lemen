@@ -7,6 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -45,6 +54,12 @@ export function UsersPage() {
   const [deleteTarget, setDeleteTarget] = useState<Id<"profiles"> | null>(null);
   const [deleteName, setDeleteName] = useState("");
 
+  const [suspendTarget, setSuspendTarget] = useState<Id<"profiles"> | null>(null);
+  const [suspendName, setSuspendName] = useState("");
+  const [suspendReason, setSuspendReason] = useState("");
+  const [suspendDuration, setSuspendDuration] = useState("7");
+  const [isSuspendDialogOpen, setIsSuspendDialogOpen] = useState(false);
+
   const profiles = useQuery(api.profiles.list, {
     search: search || undefined,
     role: roleFilter || undefined,
@@ -53,20 +68,53 @@ export function UsersPage() {
   const deleteProfile = useMutation(api.admin.deleteProfile);
   const updateRole = useMutation(api.admin.updateProfileRole);
   const updateVerification = useMutation(
-  api.admin.updateVerificationStatus,
-);
+    api.admin.updateVerificationStatus,
+  );
+  const suspendUser = useMutation(api.admin.suspendProfile);
+  const unsuspendUser = useMutation(api.admin.unsuspendProfile);
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
     try {
-      await deleteProfile({ id: deleteTarget });0
-      
+      await deleteProfile({ id: deleteTarget });
       toast.success(`Deleted ${deleteName}`);
     } catch (err) {
       toast.error((err as Error).message);
     }
     setDeleteTarget(null);
     setDeleteName("");
+  };
+
+  const handleSuspend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!suspendTarget) return;
+    try {
+      const days = parseInt(suspendDuration, 10);
+      if (isNaN(days) || days <= 0) {
+        toast.error("Please enter a valid number of days.");
+        return;
+      }
+      await suspendUser({
+        id: suspendTarget,
+        reason: suspendReason,
+        durationDays: days,
+      });
+      toast.success(`Suspended ${suspendName} for ${days} days.`);
+      setIsSuspendDialogOpen(false);
+      setSuspendTarget(null);
+      setSuspendReason("");
+    } catch (err) {
+      toast.error((err as Error).message || "Failed to suspend user");
+    }
+  };
+
+  const handleUnsuspend = async (id: Id<"profiles">, name: string) => {
+    try {
+      await unsuspendUser({ id });
+      toast.success(`Restored access for ${name}`);
+    } catch (err) {
+      toast.error((err as Error).message || "Failed to unsuspend user");
+    }
   };
 
   const handleRoleSwitch = async (
@@ -208,16 +256,26 @@ export function UsersPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        variant="secondary"
-                        className={`rounded-full text-[10px] ${
-                          u.role === "creator"
-                            ? "bg-violet/10 text-violet"
-                            : "bg-amber/10 text-amber"
-                        }`}
-                      >
-                        {u.role}
-                      </Badge>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <Badge
+                          variant="secondary"
+                          className={`rounded-full text-[10px] ${
+                            u.role === "creator"
+                              ? "bg-violet/10 text-violet"
+                              : "bg-amber/10 text-amber"
+                          }`}
+                        >
+                          {u.role}
+                        </Badge>
+                        {u.isSuspended && u.suspendedUntil && u.suspendedUntil > Date.now() && (
+                          <Badge
+                            variant="destructive"
+                            className="rounded-full text-[10px] bg-red-500/10 text-red-600 hover:bg-red-500/10 border border-red-500/20 font-semibold"
+                          >
+                            Suspended
+                          </Badge>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="text-sm">
                       {u.category || "—"}
@@ -234,7 +292,7 @@ export function UsersPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="h-8 w-8 rounded-lg cursor-pointer"
                           >
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
@@ -244,6 +302,7 @@ export function UsersPage() {
                           className="w-48 rounded-xl"
                         >
                           <DropdownMenuItem
+                            className="cursor-pointer"
                             onClick={() =>
                               handleRoleSwitch(
                                 u._id,
@@ -255,9 +314,32 @@ export function UsersPage() {
                             Switch to{" "}
                             {u.role === "creator" ? "brand" : "creator"}
                           </DropdownMenuItem>
+
+                          {u.isSuspended && u.suspendedUntil && u.suspendedUntil > Date.now() ? (
+                            <DropdownMenuItem
+                              className="text-emerald-600 focus:text-emerald-600 cursor-pointer"
+                              onClick={() => handleUnsuspend(u._id, u.fullName)}
+                            >
+                              Unsuspend user
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem
+                              className="text-amber-600 focus:text-amber-600 cursor-pointer"
+                              onClick={() => {
+                                setSuspendTarget(u._id);
+                                setSuspendName(u.fullName);
+                                setSuspendReason("");
+                                setSuspendDuration("7");
+                                setIsSuspendDialogOpen(true);
+                              }}
+                            >
+                              Suspend user
+                            </DropdownMenuItem>
+                          )}
+
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
-                            className="text-destructive focus:text-destructive"
+                            className="text-destructive focus:text-destructive cursor-pointer"
                             onClick={() => {
                               setDeleteTarget(u._id);
                               setDeleteName(u.fullName);
@@ -312,6 +394,69 @@ export function UsersPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Suspend User Dialog */}
+      <Dialog open={isSuspendDialogOpen} onOpenChange={setIsSuspendDialogOpen}>
+        <DialogContent className="sm:max-w-md rounded-3xl border border-border bg-card p-6">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl font-bold">
+              Suspend "{suspendName}"
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Temporarily restrict this user's access to the platform.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleSuspend} className="space-y-4 mt-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="suspendReason">Reason for Suspension</Label>
+              <textarea
+                id="suspendReason"
+                rows={3}
+                value={suspendReason}
+                onChange={(e) => setSuspendReason(e.target.value)}
+                placeholder="e.g. Inappropriate content, violating campaign agreements"
+                className="w-full min-h-[80px] rounded-xl border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus:border-amber-500"
+                required
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="suspendDuration">Suspension Duration (Days)</Label>
+              <Input
+                id="suspendDuration"
+                type="number"
+                min="1"
+                value={suspendDuration}
+                onChange={(e) => setSuspendDuration(e.target.value)}
+                placeholder="Number of days"
+                className="rounded-xl border-border bg-background"
+                required
+              />
+            </div>
+
+            <DialogFooter className="pt-2 flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-full flex-1"
+                onClick={() => {
+                  setIsSuspendDialogOpen(false);
+                  setSuspendTarget(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="rounded-full flex-1 bg-amber-600 hover:bg-amber-700 text-white shadow-glow"
+              >
+                Confirm Suspension
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

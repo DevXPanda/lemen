@@ -191,3 +191,130 @@ export const updateVerificationStatus = mutation({
     await ctx.db.patch(args.id, { verificationStatus: args.status });
   },
 });
+
+export const getPendingCreators = query({
+  args: {},
+  handler: async (ctx) => {
+    const creators = await ctx.db
+      .query("profiles")
+      .filter((q) => q.eq(q.field("role"), "creator"))
+      .filter((q) => q.eq(q.field("verificationStatus"), "pending"))
+      .collect();
+
+    return Promise.all(
+      creators.map(async (c) => {
+        const aadharUrl = c.aadharStorageId ? await ctx.storage.getUrl(c.aadharStorageId) : c.aadharUrl;
+        const panUrl = c.panStorageId ? await ctx.storage.getUrl(c.panStorageId) : c.panUrl;
+        return {
+          ...c,
+          aadharUrl: aadharUrl ?? null,
+          panUrl: panUrl ?? null,
+        };
+      })
+    );
+  },
+});
+
+export const getPendingBrands = query({
+  args: {},
+  handler: async (ctx) => {
+    const brands = await ctx.db
+      .query("profiles")
+      .filter((q) => q.eq(q.field("role"), "brand"))
+      .filter((q) => q.eq(q.field("verificationStatus"), "pending"))
+      .collect();
+
+    return Promise.all(
+      brands.map(async (b) => {
+        const gstCertificateUrl = b.gstCertificateStorageId ? await ctx.storage.getUrl(b.gstCertificateStorageId) : b.gstCertificateUrl;
+        return {
+          ...b,
+          gstCertificateUrl: gstCertificateUrl ?? null,
+        };
+      })
+    );
+  },
+});
+
+export const getCreatorVerificationHistory = query({
+  args: {},
+  handler: async (ctx) => {
+    const creators = await ctx.db
+      .query("profiles")
+      .filter((q) => q.eq(q.field("role"), "creator"))
+      .filter((q) =>
+        q.or(
+          q.eq(q.field("verificationStatus"), "verified"),
+          q.eq(q.field("verificationStatus"), "rejected")
+        )
+      )
+      .collect();
+
+    return Promise.all(
+      creators.map(async (c) => {
+        const aadharUrl = c.aadharStorageId ? await ctx.storage.getUrl(c.aadharStorageId) : c.aadharUrl;
+        const panUrl = c.panStorageId ? await ctx.storage.getUrl(c.panStorageId) : c.panUrl;
+        return {
+          ...c,
+          aadharUrl: aadharUrl ?? null,
+          panUrl: panUrl ?? null,
+        };
+      })
+    );
+  },
+});
+
+export const getBrandVerificationHistory = query({
+  args: {},
+  handler: async (ctx) => {
+    const brands = await ctx.db
+      .query("profiles")
+      .filter((q) => q.eq(q.field("role"), "brand"))
+      .filter((q) =>
+        q.or(
+          q.eq(q.field("verificationStatus"), "verified"),
+          q.eq(q.field("verificationStatus"), "rejected")
+        )
+      )
+      .collect();
+
+    return Promise.all(
+      brands.map(async (b) => {
+        const gstCertificateUrl = b.gstCertificateStorageId ? await ctx.storage.getUrl(b.gstCertificateStorageId) : b.gstCertificateUrl;
+        return {
+          ...b,
+          gstCertificateUrl: gstCertificateUrl ?? null,
+        };
+      })
+    );
+  },
+});
+
+export const suspendProfile = mutation({
+  args: {
+    id: v.id("profiles"),
+    reason: v.string(),
+    durationDays: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const suspendedUntil = Date.now() + args.durationDays * 24 * 60 * 60 * 1000;
+    await ctx.db.patch(args.id, {
+      isSuspended: true,
+      suspensionReason: args.reason,
+      suspendedUntil,
+    });
+  },
+});
+
+export const unsuspendProfile = mutation({
+  args: {
+    id: v.id("profiles"),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.id, {
+      isSuspended: false,
+      suspensionReason: undefined,
+      suspendedUntil: undefined,
+    });
+  },
+});
